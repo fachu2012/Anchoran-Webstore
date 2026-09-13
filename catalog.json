@@ -1,0 +1,14 @@
+{
+  "sdkVersion": "1.0.0",
+  "plugins": [
+    {
+      "id": "hello-plugin",
+      "title": "Hello, Anchoran",
+      "description": "The pilot community plugin — proves the whole pipeline: built and released here, downloaded and mounted by Anchoran OS with no Anchoran OS release needed.",
+      "icon": "star",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.3.6",
+      "entry": "https://raw.githubusercontent.com/fachu2012/Anchoran-Webstore/v1.0.0/plugins/hello-plugin/dist/index.js"
+    }
+  ]
+}
