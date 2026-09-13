@@ -8,7 +8,7 @@
       "icon": "star",
       "version": "1.0.0",
       "minAnchoranVersion": "3.3.6",
-      "entry": "https://raw.githubusercontent.com/fachu2012/Anchoran-Webstore/v1.0.0/plugins/hello-plugin/dist/index.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v1.0.0/hello-plugin.js"
     }
   ]
 }
