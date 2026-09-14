@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this repo adheres to classic [Semantic Versioning](https://semver.org/) (`v#.#.#`) —
 a separate, independent version line from Anchoran OS's own "Version # | Build #H#.#" one.
 
+## [2.3.0] - 2026-09-14
+
+### Added
+- **Anchoran Code Studio gains a Console/Output panel**, next to
+  Problems and Preview — captures the project's own `console.log`/
+  `warn`/`error`/`info` calls and real runtime errors (both synchronous
+  and async, via `error`/`unhandledrejection` listeners) while the
+  embedded Preview is running, each entry timestamped and color-coded
+  by level, with a "Clear" button. All interception is installed only
+  while a preview is actually running and always torn down afterward.
+- **"Open in Window"** — runs the project's current in-memory code in
+  a real, separate Anchoran window (no IDE chrome at all), not just
+  the embedded Preview panel — the same `pluginHost` + `ctx.openPath`
+  mechanism "My Creations" already uses to open a specific project,
+  given a second meaning (`"preview:<projectId>"`) that Code Studio's
+  own `mount()` recognizes and renders directly. Needs Anchoran OS's
+  new `sdk.openApp` (Anchoran OS v3.5.0+) — shows clear guidance in the
+  Preview panel instead of failing silently on an older host.
+
 ## [2.2.0] - 2026-09-14
 
 ### Added
