@@ -114,7 +114,14 @@ tree, or a timer/listener the cleanup function forgets to remove.
 ## Publishing
 
 Bump `catalog.json`'s relevant plugin `version` (and `package.json`'s own
-version for this repo, its overall release), commit, tag `v#.#.#` classically
-(no `Version # | Build …` styling — that convention is Anchoran OS's own),
-and push. A GitHub Release at that tag, with `catalog.json` and every
-`plugins/*/dist/index.js` attached, is what Anchoran OS actually reads.
+version for this repo, its overall release), add an entry to
+`CHANGELOG.md`, commit, tag `v#.#.#` classically (no `Version # | Build …`
+styling — that convention is Anchoran OS's own), and push. A GitHub
+Release at that tag, with `catalog.json` and every `plugins/*/dist/index.js`
+attached, is what Anchoran OS actually reads.
+
+`CHANGELOG.md` is also what the Webstore's own in-app "Changelog" button
+shows (Anchoran OS's Webstore → Community section) — fetched live from
+this repo's `main` branch, the same way Anchoran OS's own "What's new"
+fetches its CHANGELOG.md, so a release isn't done until this file says
+what changed.
