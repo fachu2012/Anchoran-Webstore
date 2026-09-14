@@ -1,0 +1,1 @@
+var l="https://fprichat.vercel.app/";function n(t){t.innerHTML="",t.style.height="100%";let e=document.createElement("iframe");return e.title="Anchoran Chat",e.src=l,e.style.width="100%",e.style.height="100%",e.style.border="none",e.style.display="block",t.appendChild(e),()=>{t.innerHTML=""}}export{n as mount};

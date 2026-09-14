@@ -7,6 +7,13 @@
     "build": "node scripts/build.js"
   },
   "devDependencies": {
-    "esbuild": "^0.23.0"
+    "canvas": "^3.2.3",
+    "esbuild": "^0.23.0",
+    "jsdom": "^30.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "dependencies": {
+    "jszip": "^3.10.2"
   }
 }

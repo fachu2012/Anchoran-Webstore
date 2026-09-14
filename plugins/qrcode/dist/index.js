@@ -1,0 +1,16 @@
+function h(o,c){let t=`anchoran-plugin-style-${o}`;if(document.getElementById(t))return;let a=document.createElement("style");a.id=t,a.textContent=c,document.head.appendChild(a)}var m=`
+.pk-root{height:100%;display:flex;flex-direction:column;color:var(--anchoran-text-primary,#F3F4F6);font-family:system-ui,sans-serif;}
+.pk-toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--anchoran-border,#2a2c33);background:var(--anchoran-surface,#1c1d22);flex-shrink:0;flex-wrap:wrap;}
+.pk-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--anchoran-border,#2a2c33);border-radius:var(--anchoran-radius-sm,6px);background:var(--anchoran-surface,#1c1d22);color:var(--anchoran-text-primary,#F3F4F6);font-size:12.5px;cursor:pointer;}
+.pk-btn:hover{background:var(--anchoran-border,#2a2c33);}
+.pk-btn:disabled{opacity:.45;cursor:default;pointer-events:none;}
+.pk-btn[data-active="true"],.pk-btn[data-op="true"]{background:var(--anchoran-accent-soft,rgba(91,141,239,.15));border-color:var(--anchoran-accent,#5B8DEF);color:var(--anchoran-accent,#5B8DEF);}
+.pk-content{flex:1;min-height:0;overflow:auto;padding:16px;}
+.pk-input{background:var(--anchoran-surface,#1c1d22);border:1px solid var(--anchoran-border,#2a2c33);border-radius:var(--anchoran-radius-sm,6px);color:var(--anchoran-text-primary,#F3F4F6);font-size:12.5px;padding:6px 8px;}
+.pk-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px 20px;color:var(--anchoran-text-secondary,#9aa0ab);text-align:center;}
+`;var w=m+`
+.qr-content{display:flex;flex-direction:column;gap:12px;align-items:center;}
+.qr-input{width:100%;resize:vertical;background:var(--anchoran-surface,#1c1d22);border:1px solid var(--anchoran-border,#2a2c33);border-radius:var(--anchoran-radius-sm,6px);color:var(--anchoran-text-primary,#F3F4F6);padding:8px;font:inherit;}
+.qr-preview{width:220px;height:220px;display:flex;align-items:center;justify-content:center;border:1px solid var(--anchoran-border,#2a2c33);border-radius:var(--anchoran-radius-md,10px);}
+.qr-placeholder{font-size:12px;color:var(--anchoran-text-secondary,#9aa0ab);text-align:center;padding:12px;}
+`;function q(o,c){h("qrcode",w);let{React:t,ReactDOM:a,Icon:p}=c,{createElement:e,useState:i,useEffect:g,useMemo:f}=t;function v(){let[d,b]=i(""),[y,s]=i(!1),[u,x]=i(!1),r=f(()=>{let n=d.trim();return n?`https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(n)}`:null},[d]);g(()=>x(!1),[r]);function k(){r&&(navigator.clipboard?.writeText(r),s(!0),setTimeout(()=>s(!1),1400))}return e("div",{className:"pk-root"},e("div",{className:"pk-content qr-content"},e("textarea",{className:"qr-input",placeholder:"Enter text or a link\u2026",value:d,onChange:n=>b(n.target.value),rows:3}),e("div",{className:"qr-preview"},r&&!u?e("img",{src:r,alt:"Generated QR code",width:220,height:220,onError:()=>x(!0)}):r&&u?e("div",{className:"qr-placeholder"},"Couldn't load the QR code. Check your connection."):e("div",{className:"qr-placeholder"},"Your QR code will appear here")),r&&e("button",{className:"pk-btn",onClick:k},p?e(p,{name:"copy",size:14}):null," ",y?"Copied":"Copy image link")))}let l=a.createRoot(o);return l.render(e(v)),()=>l.unmount()}export{q as mount};
