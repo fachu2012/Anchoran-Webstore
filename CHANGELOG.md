@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this repo adheres to classic [Semantic Versioning](https://semver.org/) (`v#.#.#`) —
 a separate, independent version line from Anchoran OS's own "Version # | Build #H#.#" one.
 
+## [2.1.0] - 2026-09-14
+
+### Added
+- `CHANGELOG.md` itself — this file, now read live by Anchoran OS's
+  Webstore Community section (its new "Changelog" button) instead of
+  only living in this repo's own commit history.
+
 ## [2.0.0] - 2026-09-14
 
 ### Added

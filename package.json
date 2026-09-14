@@ -1,6 +1,6 @@
 {
   "name": "anchoran-webstore",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Anchoran OS Webstore plugin catalog and third-party app packages, versioned and released independently of Anchoran-OS itself.",
   "scripts": {
