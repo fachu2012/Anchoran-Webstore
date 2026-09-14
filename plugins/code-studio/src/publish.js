@@ -17,6 +17,7 @@
 import JSZip from "jszip";
 import { isFolderMarker } from "./store.js";
 import { formatCode } from "./lint.js";
+import { isTypeScriptPath, stripTypes, jsPathFor } from "./typescript.js";
 
 export function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob);
@@ -39,10 +40,26 @@ export function addFilesToZip(zip, files, basePath = "") {
   return zip;
 }
 
-/** Plain export: a .zip of the project exactly as authored, no wrapper. */
+/**
+ * Plain export: a .zip of the project, no wrapper. Any `.ts`/`.tsx`
+ * file is shipped as real, type-stripped `.js` (see typescript.js) —
+ * Anchoran OS (and any plain browser) can only ever run JavaScript,
+ * so the one file this repo's own README promises as a plugin's
+ * `entry` must actually be that, even when it was authored in
+ * TypeScript for Code Studio's own convenience. Every other file
+ * (README.md, JSON, …) ships completely unchanged.
+ */
 export async function exportProjectZip(project) {
   const zip = new JSZip();
-  addFilesToZip(zip, project.files);
+  const outFiles = {};
+  for (const [path, content] of Object.entries(project.files)) {
+    if (isFolderMarker(path)) {
+      outFiles[path] = content;
+      continue;
+    }
+    outFiles[isTypeScriptPath(path) ? jsPathFor(path) : path] = isTypeScriptPath(path) ? stripTypes(path, content) : content;
+  }
+  addFilesToZip(zip, outFiles);
   const blob = await zip.generateAsync({ type: "blob" });
   return { blob, filename: `${slug(project.name)}.zip` };
 }

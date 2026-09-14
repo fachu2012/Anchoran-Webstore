@@ -3,7 +3,7 @@
  * Anchoran plugin, right inside Anchoran OS. Everything here is
  * 100% local to your user profile (see store.js's header for exactly
  * why that survives Anchoran OS updates) unless you explicitly Export
- * or "Make It Official".
+ * or Export it as a zip.
  *
  * EDITOR CHOICE: a real CodeMirror 6 editor (editor.js), not a plain
  * <textarea> — this is a genuine esbuild bundle (not a size-capped
@@ -14,8 +14,12 @@
  *
  * MODULE SYSTEM FOR THE LIVE PREVIEW: see runtime.js's header — a
  * deliberately minimal, regex-based, in-memory CommonJS-ish resolver
- * covering relative requires/imports between a project's own files
- * only (no npm packages). Its limitations are documented there.
+ * covering relative requires/imports between a project's own files,
+ * this repo's own `_shared/pluginKit.js` helper, and a curated
+ * allowlist of common npm packages (see runtime.js's
+ * ALLOWED_BARE_PACKAGES) fetched live from esm.sh. Its limitations
+ * (and exactly why the npm side is an allowlist, not an open
+ * resolver) are documented there.
  *
  * LAYOUT: a simplified VS Code shape — a narrow file-explorer sidebar,
  * open-file tabs above the editor, the editor filling the center, and
@@ -30,8 +34,8 @@ import { injectStyle, SHELL_CSS, pluginStorage } from "../../_shared/pluginKit.j
 import * as store from "./store.js";
 import { createCodeMirrorView, setViewContent, setViewTheme } from "./editor.js";
 import { checkSyntax, formatCode } from "./lint.js";
-import { runProject } from "./runtime.js";
-import { exportProjectZip, buildOfficialPackage, downloadBlob } from "./publish.js";
+import { runProject, preloadBareImports } from "./runtime.js";
+import { exportProjectZip, downloadBlob } from "./publish.js";
 import { fetchOfficialCatalog, fetchOfficialSource, forkToProjectOptions } from "./officialCatalog.js";
 
 const CSS =
@@ -78,11 +82,6 @@ const CSS =
 .cs-problem-file{font-size:11px;font-weight:600;}
 .cs-problem-msg{font-size:11px;color:#E5484D;}
 .cs-problem-ok{opacity:.5;padding:10px 4px;}
-.cs-preview-wrap{height:100%;display:flex;flex-direction:column;}
-.cs-preview-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.cs-preview-host{position:absolute;inset:0;border:1px dashed var(--anchoran-border,#2a2c33);border-radius:6px;overflow:auto;}
-.cs-preview-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11.5px;text-align:center;padding:10px;}
-.cs-preview-error{color:#E5484D;font-size:11px;white-space:pre-wrap;padding:8px;}
 .cs-console-toolbar{display:flex;justify-content:flex-end;margin-bottom:6px;}
 .cs-console-list{display:flex;flex-direction:column;font-family:'Cascadia Code',Consolas,monospace;font-size:11px;}
 .cs-console-line{display:flex;gap:8px;padding:3px 4px;border-bottom:1px solid var(--anchoran-border,#2a2c33);white-space:pre-wrap;word-break:break-word;color:var(--anchoran-text-primary,#F3F4F6);}
@@ -115,23 +114,70 @@ const SAVE_DEBOUNCE_MS = 600;
  * `ctx.openPath` normally carries a plain project id — "My Creations"
  * (Anchoran OS's Webstore sidebar) opens Code Studio straight into
  * that project's IDE this way. This prefix gives that SAME field a
- * second, distinct meaning: "Open in Window" (see the App component's
- * openInWindow()) opens a SECOND, independent Code Studio window whose
- * `ctx.openPath` is `PREVIEW_WINDOW_PREFIX + projectId` instead — this
- * plugin's own mount() recognizes that prefix below and, instead of
- * rendering the IDE at all, loads that one project from storage,
- * builds it via runProject() (the exact same in-memory module runner
- * the embedded Preview panel uses — see runtime.js), and mounts its
- * `mount()` directly into `container`, filling the whole window with
- * nothing but the running app. Genuinely a real, separate Anchoran
- * window (its own titlebar, its own taskbar entry, resizable/movable
- * independently of the Code Studio window that spawned it) — not a
- * simulation — but still running the project's CURRENT in-memory
- * source, not a published/downloaded plugin build.
+ * second, distinct meaning: "Run test on window" (see the App
+ * component's handleRunTestOnWindow()) opens a SECOND, independent
+ * Code Studio window whose `ctx.openPath` is `PREVIEW_WINDOW_PREFIX +
+ * projectId` instead — this plugin's own mount() recognizes that
+ * prefix below and, instead of rendering the IDE at all, loads that
+ * one project from storage, builds it via runProject() (the exact
+ * same in-memory module runner used everywhere else — see
+ * runtime.js), and mounts its `mount()` directly into `container`,
+ * filling the whole window with nothing but the running app.
+ * Genuinely a real, separate Anchoran window (its own titlebar, its
+ * own taskbar entry, resizable/movable independently of the Code
+ * Studio window that spawned it) — not a simulation — but still
+ * running the project's CURRENT in-memory source, not a published/
+ * downloaded plugin build.
  */
 const PREVIEW_WINDOW_PREFIX = "preview:";
 
-/** The "Open in Window" side of PREVIEW_WINDOW_PREFIX above: renders nothing but the previewed project's own mount() output, filling `container` — no IDE chrome (explorer/tabs/Problems/Console) at all. */
+function formatConsoleArgs(args) {
+  return Array.from(args)
+    .map((a) => {
+      if (typeof a === "string") return a;
+      if (a instanceof Error) return a.stack || a.message;
+      try {
+        return JSON.stringify(a);
+      } catch {
+        return String(a);
+      }
+    })
+    .join(" ");
+}
+
+/**
+ * "Run test on window" opens the project in a real, separate Anchoran
+ * window (see mountPreviewOnlyWindow below) while the ORIGINATING
+ * Code Studio window's own Console panel keeps showing that window's
+ * console.log/warn/error/info calls and runtime errors LIVE, in the
+ * background — a real window opens Chromium-fresh each time, but
+ * Anchoran OS loads a given plugin's dist/index.js module ONCE and
+ * calls its exported mount() again for every new window of that
+ * plugin (see the smoke-test harness's own note on this: it has to
+ * cache-bust imports between tests specifically because module-level
+ * state — like this bus — otherwise persists across mount() calls in
+ * production). That's what makes a plain module-scope pub/sub enough
+ * here — no IPC, no BroadcastChannel, both windows already share one
+ * JS realm.
+ */
+const previewConsoleListeners = new Map(); // projectId -> Set<(entry) => void>
+
+function publishPreviewConsole(projectId, entry) {
+  previewConsoleListeners.get(projectId)?.forEach((fn) => fn(entry));
+}
+
+/** Returns an unsubscribe function. */
+function subscribePreviewConsole(projectId, listener) {
+  let set = previewConsoleListeners.get(projectId);
+  if (!set) previewConsoleListeners.set(projectId, (set = new Set()));
+  set.add(listener);
+  return () => {
+    set.delete(listener);
+    if (set.size === 0) previewConsoleListeners.delete(projectId);
+  };
+}
+
+/** The window "Run test on window" opens: renders nothing but the project's own mount() output, filling `container` — no IDE chrome (explorer/tabs/Problems/Console) at all. Its own console output/runtime errors are published on previewConsoleListeners above, for the Code Studio window that opened it to show live. */
 function mountPreviewOnlyWindow(container, sdk, ctx) {
   const projectId = ctx.openPath.slice(PREVIEW_WINDOW_PREFIX.length);
   const project = store.getProject(projectId);
@@ -139,17 +185,68 @@ function mountPreviewOnlyWindow(container, sdk, ctx) {
     container.textContent = "This project no longer exists — it may have been deleted from Code Studio or from the Webstore's My Creations.";
     return () => {};
   }
-  try {
-    const exported = runProject(project.files, project.entryPath);
-    if (typeof exported.mount !== "function") {
-      throw new Error(`"${project.entryPath}" doesn't export a mount() function.`);
-    }
-    const cleanup = exported.mount(container, sdk, { windowId: ctx.windowId });
-    return typeof cleanup === "function" ? cleanup : () => {};
-  } catch (err) {
-    container.textContent = `Couldn't run "${project.name}": ${err instanceof Error ? err.message : String(err)}`;
-    return () => {};
+
+  const originalConsole = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+  for (const level of ["log", "warn", "error", "info"]) {
+    console[level] = (...args) => {
+      originalConsole[level].apply(console, args);
+      publishPreviewConsole(projectId, { level, message: formatConsoleArgs(args), ts: Date.now() });
+    };
   }
+  const onWindowError = (e) => {
+    publishPreviewConsole(projectId, { level: "error", message: `Uncaught: ${e?.error?.stack || e?.error?.message || e?.message || "unknown error"}`, ts: Date.now() });
+  };
+  const onUnhandledRejection = (e) => {
+    const reason = e?.reason;
+    publishPreviewConsole(projectId, { level: "error", message: `Unhandled promise rejection: ${reason instanceof Error ? reason.stack || reason.message : String(reason)}`, ts: Date.now() });
+  };
+  window.addEventListener("error", onWindowError);
+  window.addEventListener("unhandledrejection", onUnhandledRejection);
+  const restoreConsole = () => {
+    console.log = originalConsole.log;
+    console.warn = originalConsole.warn;
+    console.error = originalConsole.error;
+    console.info = originalConsole.info;
+    window.removeEventListener("error", onWindowError);
+    window.removeEventListener("unhandledrejection", onUnhandledRejection);
+  };
+
+  // preloadBareImports needs the network, so mounting the project's
+  // own mount() happens async — this window still returns a real,
+  // synchronous cleanup function right away (as AnchoranPluginModule's
+  // contract requires), guarded by `closed` in case the window is
+  // shut before the fetch resolves.
+  let closed = false;
+  let realCleanup = null;
+  (async () => {
+    try {
+      const bareModules = await preloadBareImports(project.files);
+      if (closed) return;
+      const exported = runProject(project.files, project.entryPath, bareModules);
+      if (typeof exported.mount !== "function") {
+        throw new Error(`"${project.entryPath}" doesn't export a mount() function.`);
+      }
+      const cleanup = exported.mount(container, sdk, { windowId: ctx.windowId });
+      if (closed) {
+        cleanup?.();
+        return;
+      }
+      realCleanup = typeof cleanup === "function" ? cleanup : null;
+    } catch (err) {
+      const message = err instanceof Error ? err.stack || err.message : String(err);
+      publishPreviewConsole(projectId, { level: "error", message, ts: Date.now() });
+      if (!closed) container.textContent = `Couldn't run "${project.name}": ${err instanceof Error ? err.message : String(err)}`;
+    }
+  })();
+
+  return () => {
+    closed = true;
+    try {
+      realCleanup?.();
+    } finally {
+      restoreConsole();
+    }
+  };
 }
 
 export function mount(container, sdk, ctx) {
@@ -385,6 +482,7 @@ export function mount(container, sdk, ctx) {
       const view = createCodeMirrorView({
         parent: hostRef.current,
         doc: value,
+        path,
         themeMode,
         onChange: (text) => onChangeRef.current && onChangeRef.current(text),
       });
@@ -436,12 +534,8 @@ export function mount(container, sdk, ctx) {
     const [problems, setProblems] = useState({});
     const [panelTab, setPanelTab] = useState("problems");
     const [modal, setModal] = useState(null);
-    const [previewState, setPreviewState] = useState("idle"); // idle | running | error
-    const [previewError, setPreviewError] = useState(null);
     const [consoleLines, setConsoleLines] = useState([]);
-    const previewHostRef = useRef(null);
-    const previewCleanupRef = useRef(null);
-    const consoleRestoreRef = useRef(null); // set while a preview is running: undoes the console.*/window listener interception below
+    const previewUnsubscribeRef = useRef(null); // set while subscribed to a "Run test on window" instance's live console output — see previewConsoleListeners
     const saveTimerRef = useRef(null);
     const checkTimersRef = useRef({});
     const projectRef = useRef(null);
@@ -449,10 +543,10 @@ export function mount(container, sdk, ctx) {
 
     // Unmount (window closed): flush any debounced save still pending
     // so the last few keystrokes aren't lost, clear every pending
-    // syntax-check timer, and stop a running preview's own cleanup —
-    // otherwise a preview'd plugin's timers/listeners would outlive
-    // this window, exactly the class of bug this repo's own smoke
-    // tests exist to catch (see tests/smoke.test.js's header).
+    // syntax-check timer, and unsubscribe from a running "Run test on
+    // window" instance's live console feed — otherwise this closed
+    // window's stale setConsoleLines would keep getting called forever
+    // by previewConsoleListeners above.
     useEffect(() => {
       return () => {
         if (saveTimerRef.current) {
@@ -460,16 +554,7 @@ export function mount(container, sdk, ctx) {
           if (projectRef.current) store.saveProject(projectRef.current);
         }
         Object.values(checkTimersRef.current).forEach(clearTimeout);
-        try {
-          previewCleanupRef.current?.();
-        } catch {
-          /* a broken preview cleanup shouldn't block this window from closing */
-        }
-        try {
-          consoleRestoreRef.current?.();
-        } catch {
-          /* same — restoring console/listener interception must never block closing */
-        }
+        previewUnsubscribeRef.current?.();
       };
     }, []);
 
@@ -550,8 +635,23 @@ export function mount(container, sdk, ctx) {
       }, SAVE_DEBOUNCE_MS);
     }
 
+    // "Run test on window" opens a genuinely separate window that can
+    // only read this project's already-SAVED files (store.getProject),
+    // not this window's own React state — call this right before it
+    // does, so the debounced save above (up to SAVE_DEBOUNCE_MS behind)
+    // never makes that window run stale, pre-edit source.
+    function flushPendingSave() {
+      if (!saveTimerRef.current) return;
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+      if (projectRef.current) {
+        store.saveProject(projectRef.current);
+        setSummaries(store.listProjectSummaries());
+      }
+    }
+
     function switchProject(id) {
-      stopPreview();
+      previewUnsubscribeRef.current?.();
       store.setActiveProjectId(id);
       const full = store.getProject(id);
       setProject(full);
@@ -651,143 +751,60 @@ export function mount(container, sdk, ctx) {
       }
     }
 
-    // Appends one line to the Console/Output panel. Used both by the
-    // console.*/window-error interception runPreview() installs below,
-    // and directly for a synchronous mount() throw (caught in
-    // runPreview's own catch) — so every way a preview can fail shows
-    // up in one place, not split between "Problems" (static syntax
-    // only) and some errors silently only hitting the Preview banner.
+    // Appends one line to the Console panel. Fed both by a subscribed
+    // "Run test on window" instance's live output (see
+    // previewConsoleListeners) and directly for local errors (a bad
+    // project failing checkAllFiles never even gets to open a window).
     function pushConsole(level, message) {
       setConsoleLines((lines) => [...lines, { level, message, ts: Date.now() }]);
     }
 
-    function formatConsoleArgs(args) {
-      return Array.from(args)
-        .map((a) => {
-          if (typeof a === "string") return a;
-          if (a instanceof Error) return a.stack || a.message;
-          try {
-            return JSON.stringify(a);
-          } catch {
-            return String(a);
-          }
-        })
-        .join(" ");
-    }
-
     /**
-     * Wraps console.log/warn/error/info (the SAME global `console`
-     * object runtime.js's module factories are handed as their own
-     * `console` parameter, so this catches a project's console calls
-     * either way) to mirror every call into the Console panel while
-     * still calling the real console method, and adds `window`
-     * "error"/"unhandledrejection" listeners for runtime errors that
-     * happen AFTER mount() returns (a click handler that throws, a
-     * rejected promise, etc — mount() itself throwing SYNCHRONOUSLY is
-     * caught directly in runPreview's own try/catch instead, since
-     * that happens before these listeners would even be attached).
-     * Returns a restore() function — callers MUST call it exactly
-     * once when the preview stops (stopPreview, or this window
-     * closing) or the interception leaks past the preview's lifetime.
-     */
-    function interceptPreviewConsole() {
-      const originalConsole = { log: console.log, warn: console.warn, error: console.error, info: console.info };
-      for (const level of ["log", "warn", "error", "info"]) {
-        console[level] = (...args) => {
-          originalConsole[level].apply(console, args);
-          pushConsole(level, formatConsoleArgs(args));
-        };
-      }
-      const onWindowError = (e) => {
-        pushConsole("error", `Uncaught: ${e?.error?.stack || e?.error?.message || e?.message || "unknown error"}`);
-      };
-      const onUnhandledRejection = (e) => {
-        const reason = e?.reason;
-        pushConsole("error", `Unhandled promise rejection: ${reason instanceof Error ? reason.stack || reason.message : String(reason)}`);
-      };
-      window.addEventListener("error", onWindowError);
-      window.addEventListener("unhandledrejection", onUnhandledRejection);
-      return () => {
-        console.log = originalConsole.log;
-        console.warn = originalConsole.warn;
-        console.error = originalConsole.error;
-        console.info = originalConsole.info;
-        window.removeEventListener("error", onWindowError);
-        window.removeEventListener("unhandledrejection", onUnhandledRejection);
-      };
-    }
-
-    function stopPreview() {
-      try {
-        previewCleanupRef.current?.();
-      } catch {
-        /* a broken cleanup shouldn't block stopping the preview */
-      }
-      previewCleanupRef.current = null;
-      try {
-        consoleRestoreRef.current?.();
-      } catch {
-        /* same — must not block stopping the preview */
-      }
-      consoleRestoreRef.current = null;
-      if (previewHostRef.current) previewHostRef.current.innerHTML = "";
-      setPreviewState("idle");
-      setPreviewError(null);
-    }
-
-    async function runPreview() {
-      if (!project) return;
-      stopPreview();
-      setConsoleLines([]);
-      setPanelTab("preview");
-      const fresh = await checkAllFiles(project);
-      const hasErrors = Object.values(fresh).some(Boolean);
-      if (hasErrors) {
-        setPanelTab("problems");
-        setPreviewState("error");
-        setPreviewError("Fix the syntax problems listed in the Problems tab before running the preview.");
-        return;
-      }
-      const restoreConsole = interceptPreviewConsole();
-      try {
-        const exported = runProject(project.files, project.entryPath);
-        if (typeof exported.mount !== "function") {
-          throw new Error(`"${project.entryPath}" doesn't export a mount() function — nothing to preview yet.`);
-        }
-        const previewSdk = { ...sdk };
-        const cleanup = exported.mount(previewHostRef.current, previewSdk, { windowId: `${ctx?.windowId ?? "code-studio"}:preview` });
-        previewCleanupRef.current = typeof cleanup === "function" ? cleanup : null;
-        consoleRestoreRef.current = restoreConsole; // keep interception live for as long as the preview keeps running
-        setPreviewState("running");
-      } catch (err) {
-        const message = err instanceof Error ? err.stack || err.message : String(err);
-        pushConsole("error", message);
-        restoreConsole(); // mount() never actually started running, so nothing to keep intercepting
-        setPreviewState("error");
-        setPreviewError(message);
-      }
-    }
-
-    /**
-     * Opens a SECOND, real, independent Anchoran window running this
-     * project's current in-memory source — see PREVIEW_WINDOW_PREFIX
-     * and mountPreviewOnlyWindow() above for how that window renders.
+     * "Run test on window": opens this project in a real, separate
+     * Anchoran window (mountPreviewOnlyWindow, foreground) while THIS
+     * window's own Console tab (background) subscribes to that
+     * window's live console output/runtime errors via
+     * previewConsoleListeners — replaces the old separate "Run
+     * Preview" (embedded) / "Open in Window" pair with the one real
+     * window everyone actually wants to see, without losing the
+     * live-error-capture the embedded preview used to give.
      * `sdk.openApp` is not part of the documented App SDK (see this
      * repo's README / anchoranSDK.ts) as of this writing — it's called
      * defensively so this button degrades to a clear explanation
      * instead of silently doing nothing on an Anchoran OS build that
      * doesn't expose it yet.
      */
-    function openInWindow() {
+    async function handleRunTestOnWindow() {
       if (!project) return;
-      if (typeof sdk.openApp !== "function") {
-        setPanelTab("preview");
-        setPreviewError(
-          'Opening a separate window needs a small addition to the Anchoran App SDK ("sdk.openApp") that this build of Anchoran OS doesn\'t expose yet — use the embedded Preview panel above for now.'
-        );
+      previewUnsubscribeRef.current?.();
+      flushPendingSave();
+      setConsoleLines([]);
+      setPanelTab("console");
+      const fresh = await checkAllFiles(project);
+      const hasErrors = Object.values(fresh).some(Boolean);
+      if (hasErrors) {
+        setPanelTab("problems");
         return;
       }
+      if (typeof sdk.openApp !== "function") {
+        pushConsole("error", 'Opening a separate window needs a small addition to the Anchoran App SDK ("sdk.openApp") that this build of Anchoran OS doesn\'t expose yet.');
+        return;
+      }
+      previewUnsubscribeRef.current = subscribePreviewConsole(project.id, (entry) => setConsoleLines((lines) => [...lines, entry]));
       sdk.openApp("pluginHost", { pluginId: "code-studio", title: project.name, openPath: `${PREVIEW_WINDOW_PREFIX}${project.id}` });
+    }
+
+    async function handleCopyConsole() {
+      if (consoleLines.length === 0) return;
+      const text = consoleLines
+        .map((entry) => `[${new Date(entry.ts).toISOString().slice(11, 23)}] ${entry.level.toUpperCase()}: ${entry.message}`)
+        .join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        sdk.pushNotification?.("Code Studio", "Console output copied to clipboard.");
+      } catch {
+        sdk.pushNotification?.("Code Studio", "Couldn't copy the console output — clipboard access was denied.");
+      }
     }
 
     async function handleExport() {
@@ -797,17 +814,6 @@ export function mount(container, sdk, ctx) {
       sdk.pushNotification?.("Code Studio", `Exported "${project.name}" as ${filename}.`);
     }
 
-    async function handleMakeOfficial() {
-      if (!project) return;
-      const fresh = await checkAllFiles(project);
-      if (Object.values(fresh).some(Boolean)) {
-        setPanelTab("problems");
-        return;
-      }
-      const { blob, filename } = await buildOfficialPackage(project);
-      downloadBlob(filename, blob);
-      sdk.pushNotification?.("Code Studio", `Built the "Make It Official" package for "${project.name}" — see its README.md for the manual publishing steps.`);
-    }
 
     function handleNewProject() {
       setModal({
@@ -942,12 +948,8 @@ export function mount(container, sdk, ctx) {
         h("button", { className: "cs-btn", onClick: handleDeleteProject, title: "Delete Project" }, icon("close", 13)),
         h("div", { className: "cs-spacer" }),
         h("button", { className: "cs-btn", onClick: handleFormat, disabled: !activePath }, "Format"),
-        previewState === "running"
-          ? h("button", { className: "cs-btn", onClick: stopPreview }, "Stop Preview")
-          : h("button", { className: "cs-btn", onClick: runPreview }, "Run Preview"),
-        h("button", { className: "cs-btn", onClick: openInWindow, title: "Open this project in its own real Anchoran window" }, "Open in Window"),
-        h("button", { className: "cs-btn", onClick: handleExport }, "Export"),
-        h("button", { className: "cs-btn cs-btn-accent", style: { background: accent, color: "#fff" }, onClick: handleMakeOfficial }, "Make It Official")
+        h("button", { className: "cs-btn", onClick: handleRunTestOnWindow, title: "Run this project in its own real Anchoran window — its console output shows live in the Console tab below" }, "Run test on window"),
+        h("button", { className: "cs-btn cs-btn-accent", style: { background: accent, color: "#fff" }, onClick: handleExport }, "Export")
       ),
       h(
         "div",
@@ -1027,7 +1029,6 @@ export function mount(container, sdk, ctx) {
                 "Problems",
                 problemCount > 0 && h("span", { className: "cs-panel-badge" }, problemCount)
               ),
-              h("div", { className: "cs-panel-tab", "data-active": String(panelTab === "preview"), onClick: () => setPanelTab("preview") }, "Preview"),
               h(
                 "div",
                 { className: "cs-panel-tab", "data-active": String(panelTab === "console"), onClick: () => setPanelTab("console") },
@@ -1046,10 +1047,11 @@ export function mount(container, sdk, ctx) {
               h(
                 "div",
                 { className: "cs-console-toolbar" },
+                h("button", { className: "cs-btn", disabled: consoleLines.length === 0, onClick: handleCopyConsole }, "Copy"),
                 h("button", { className: "cs-btn", onClick: () => setConsoleLines([]) }, "Clear")
               ),
               consoleLines.length === 0
-                ? h("div", { className: "cs-problem-ok" }, "No output yet — run the preview to see console logs and runtime errors here, live.")
+                ? h("div", { className: "cs-problem-ok" }, '"Run test on window" above to see that window\'s console logs and runtime errors here, live.')
                 : h(
                     "div",
                     { className: "cs-console-list" },
@@ -1062,31 +1064,6 @@ export function mount(container, sdk, ctx) {
                       )
                     )
                   )
-            ),
-            h(
-              "div",
-              { className: "cs-panel-body", style: { display: panelTab === "preview" ? "block" : "none" } },
-              h(
-                "div",
-                { className: "cs-preview-wrap" },
-                previewError && h("div", { className: "cs-preview-error" }, previewError),
-                h(
-                  "div",
-                  { style: { position: "relative", flex: 1, minHeight: 0 } },
-                  // The preview host's CHILDREN are exclusively owned by the
-                  // previewed plugin's OWN ReactDOM.createRoot() call (runPreview()
-                  // below) once it mounts — this outer App must never also render
-                  // JSX children into this exact node, or the two independent
-                  // React reconcilers fight over the same DOM subtree (one sees a
-                  // node the other already removed/replaced) and throw
-                  // "NotFoundError: node to be removed is not a child of this
-                  // node" the moment either side's next commit disagrees with the
-                  // other's last one. The "click to run" placeholder is therefore
-                  // a SIBLING, absolutely positioned on top, not a child.
-                  h("div", { className: "cs-preview-host", ref: previewHostRef }),
-                  previewState === "idle" && !previewError && h("div", { className: "cs-preview-placeholder" }, `Click "Run Preview" above to mount "${project.entryPath}" here, live.`)
-                )
-              )
             )
           )
         )

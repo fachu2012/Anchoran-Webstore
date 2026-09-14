@@ -2,12 +2,33 @@
  * The Preview panel's module system — a MINIMAL, IN-MEMORY, CommonJS-
  * style module loader (`function(module, exports, require){...}`,
  * relative paths resolved against the project's own virtual file
- * tree), exactly as scoped: it links a project's own files to each
- * other so a multi-file plugin-in-progress can `import`/`require` its
- * own modules and preview live — it does NOT support importing npm
- * packages (no "jszip", no "react" as a bare specifier — the host
- * React instance is handed in as `sdk.React` instead, same as every
- * real Anchoran plugin) and it does NOT run a real bundler.
+ * tree) that links a project's own files to each other so a
+ * multi-file plugin-in-progress can `import`/`require` its own
+ * modules and preview live. It does NOT run a real bundler — but it
+ * DOES support the two kinds of "outside the project" imports real
+ * Anchoran plugin source actually uses:
+ *
+ *   - `../../_shared/pluginKit.js` (any relative depth — it's
+ *     normalized away, see resolveRelative below): this repo's own
+ *     shared helper module, bundled directly into this file at BUILD
+ *     time (the static `import * as PluginKit` below — esbuild
+ *     inlines its real source, same as it does for every other
+ *     plugin's own build) and served back out of BUILTIN_MODULES as a
+ *     virtual, already-loaded module. No network access involved.
+ *   - any bare specifier ("jszip", "date-fns", anything a user's own
+ *     project happens to `import`): resolved at PREVIEW time via a
+ *     real dynamic `import()` of `https://esm.sh/<spec>` — a public,
+ *     read-only ESM CDN that converts arbitrary npm packages to real
+ *     browser ES modules on the fly. This is deliberately generic
+ *     rather than an allowlist of specific packages: nobody can
+ *     predict every library a user's own project will eventually
+ *     reach for, so runPreview() pre-resolves every bare specifier a
+ *     project's files mention (see preloadBareImports below) before
+ *     the synchronous module graph below ever runs, and hands the
+ *     results in as `bareModules`. A package that fails to resolve
+ *     (offline, a typo, something esm.sh can't serve) surfaces as a
+ *     normal "Cannot resolve" preview error naming exactly that
+ *     package — it never silently breaks every other import.
  *
  * Anchoran plugins are authored (and published) in real ES module
  * syntax (`export function mount`, `import x from "./y"`) — matching
@@ -29,6 +50,40 @@
  * or on the exported/published files (also the real, untouched
  * source) — only on whether this one in-app preview can execute it.
  */
+import * as PluginKit from "../../_shared/pluginKit.js";
+import { isTypeScriptPath, stripTypes } from "./typescript.js";
+
+/** Virtual modules resolved without touching the network — see file header. Keyed by the normalized relative path resolveRelative() would produce for that import, no matter how many "../" a project file used to reach it. */
+const BUILTIN_MODULES = {
+  "_shared/pluginKit.js": PluginKit,
+};
+
+/**
+ * The ONLY bare (non-relative) specifiers the Preview will ever fetch
+ * and run — a deliberate allowlist, not an open resolver. A project
+ * can `import` any of these by name and it resolves live via esm.sh
+ * (a public, read-only ESM CDN); anything not on this list fails with
+ * a clear error instead of silently fetching and executing whatever
+ * string happens to appear in the user's own source. This is a
+ * security boundary, not a technical one — letting arbitrary text
+ * pulled out of a project's files decide what remote code gets
+ * fetched and run would turn "import from official" and every
+ * project's own files into a code-execution vector. Extend this list
+ * deliberately (a real, vetted, well-known package) rather than
+ * removing the allowlist itself.
+ */
+const ALLOWED_BARE_PACKAGES = new Set([
+  "jszip", "uuid", "date-fns", "papaparse", "marked",
+  // The 25 below are widely-used, general-purpose utility/UI/data
+  // libraries with no filesystem, process, or network-credential
+  // access of their own (axios/chart.js/d3 just do plain fetch/DOM
+  // work the preview can already do anyway) — safe to hand to any
+  // project someone builds here.
+  "lodash", "dayjs", "zod", "clsx", "classnames", "immer", "axios",
+  "chart.js", "d3", "dompurify", "nanoid", "qs", "ramda", "yup",
+  "luxon", "numeral", "slugify", "validator", "tinycolor2", "mathjs",
+  "fuse.js", "color", "pluralize", "currency.js", "chroma-js",
+]);
 
 function resolveRelative(fromPath, spec) {
   const fromDir = fromPath.includes("/") ? fromPath.slice(0, fromPath.lastIndexOf("/")) : "";
@@ -41,12 +96,66 @@ function resolveRelative(fromPath, spec) {
   return stack.join("/");
 }
 
-/** Resolves a require()/import specifier against the project's files map. Only relative specifiers ("./x", "../x") are supported — a bare specifier ("jszip", "react") always fails to resolve, by design. */
+/** Resolves a require()/import specifier against the project's files map. Only relative specifiers ("./x", "../x") are handled here — a bare specifier ("jszip", "react") is resolved separately, see resolveBuiltin/preloadBareImports. */
 export function resolveModule(fromPath, spec, files) {
   if (!spec.startsWith(".")) return null;
   const base = resolveRelative(fromPath, spec);
-  const candidates = [base, `${base}.js`, `${base}.jsx`, `${base}/index.js`];
+  const candidates = [base, `${base}.js`, `${base}.jsx`, `${base}.ts`, `${base}.tsx`, `${base}/index.js`, `${base}/index.ts`];
   return candidates.find((c) => Object.prototype.hasOwnProperty.call(files, c)) ?? null;
+}
+
+/** Resolves a RELATIVE specifier against BUILTIN_MODULES (e.g. "../../_shared/pluginKit.js" from any project file). Returns the module's exports object, or null if this relative path isn't one of the builtins. */
+function resolveBuiltinRelative(fromPath, spec) {
+  if (!spec.startsWith(".")) return null;
+  const base = resolveRelative(fromPath, spec);
+  return BUILTIN_MODULES[base] ?? BUILTIN_MODULES[`${base}.js`] ?? null;
+}
+
+/**
+ * Scans every file in the project for bare import/require specifiers
+ * ("jszip", not "./x") and resolves each one that's on
+ * ALLOWED_BARE_PACKAGES via a real dynamic import() of esm.sh, in
+ * parallel. Call this BEFORE runProject() and pass its result in as
+ * `bareModules` — it's what lets bare-specifier requires below stay
+ * synchronous despite needing a real network fetch to satisfy them.
+ * A specifier NOT on the allowlist is recorded as "not allowed"
+ * rather than fetched at all. A package that fails to resolve
+ * (offline, esm.sh hiccup) is recorded as its error, not thrown here,
+ * so one bad import never blocks every other file's preview from
+ * starting.
+ *
+ * `importer` defaults to a real dynamic `import()` of the esm.sh URL
+ * (what Anchoran OS's real Chromium runtime uses) — overridable so
+ * tests can inject a stub instead of needing plain Node's `import()`
+ * to support `https:` specifiers, which it doesn't (that's a real
+ * browser/Electron capability, not a bare-Node one).
+ */
+export async function preloadBareImports(files, importer = (url) => import(/* @vite-ignore */ url)) {
+  const specs = new Set();
+  const bareImportRe = /\bimport\s+(?:[\w$*{}\s,]+\s+from\s+)?["']([^./"'][^"']*)["']/g;
+  const bareRequireRe = /\brequire\(\s*["']([^./"'][^"']*)["']\s*\)/g;
+  for (const source of Object.values(files)) {
+    for (const re of [bareImportRe, bareRequireRe]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(source))) specs.add(m[1]);
+    }
+  }
+  const entries = await Promise.all(
+    Array.from(specs).map(async (spec) => {
+      if (!ALLOWED_BARE_PACKAGES.has(spec)) {
+        const allowed = Array.from(ALLOWED_BARE_PACKAGES).join(", ");
+        return [spec, { ok: false, error: `not a supported preview library. Supported: ${allowed}.` }];
+      }
+      try {
+        const mod = await importer(`https://esm.sh/${spec}`);
+        return [spec, { ok: true, module: mod }];
+      } catch (err) {
+        return [spec, { ok: false, error: err?.message || String(err) }];
+      }
+    })
+  );
+  return new Map(entries);
 }
 
 /** Best-effort ESM -> CommonJS-ish rewrite. See file header for exactly what's covered. */
@@ -127,8 +236,13 @@ export function transformEsmToCjs(source) {
  * Every module gets `console`, `require`, `module`, `exports` — no
  * other globals are injected (a module that touches `window`/
  * `document` directly still can, same as any real plugin can).
+ *
+ * `bareModules` (optional) is the Map preloadBareImports() returns —
+ * pass it whenever a project might `import` a bare npm-style
+ * specifier; without it, every bare specifier fails to resolve (the
+ * original, network-free behavior).
  */
-export function runProject(files, entryPath) {
+export function runProject(files, entryPath, bareModules) {
   const cache = new Map();
 
   function requireModule(path, stack) {
@@ -141,13 +255,25 @@ export function runProject(files, entryPath) {
     }
     const mod = { exports: {} };
     cache.set(path, mod);
-    const transformed = transformEsmToCjs(files[path]);
+    const jsSource = isTypeScriptPath(path) ? stripTypes(path, files[path]) : files[path];
+    const transformed = transformEsmToCjs(jsSource);
     const localRequire = (spec) => {
       const resolved = resolveModule(path, spec, files);
-      if (!resolved) {
-        throw new Error(`Cannot resolve "${spec}" from "${path}" — Code Studio's preview only resolves relative paths within this project (no npm packages, no shared repo helpers).`);
+      if (resolved) return requireModule(resolved, [...stack, path]);
+
+      const builtin = resolveBuiltinRelative(path, spec);
+      if (builtin) return builtin;
+
+      if (!spec.startsWith(".")) {
+        const preloaded = bareModules?.get(spec);
+        if (preloaded?.ok) return preloaded.module;
+        if (preloaded && !preloaded.ok) {
+          throw new Error(`Couldn't load "${spec}" (fetched live from esm.sh for preview) — ${preloaded.error}`);
+        }
+        throw new Error(`"${spec}" isn't available in this preview yet — close and reopen Run Preview so it can be fetched.`);
       }
-      return requireModule(resolved, [...stack, path]);
+
+      throw new Error(`Cannot resolve "${spec}" from "${path}" — no such file in this project.`);
     };
     // eslint-disable-next-line no-new-func
     const factory = new Function("module", "exports", "require", "console", transformed);

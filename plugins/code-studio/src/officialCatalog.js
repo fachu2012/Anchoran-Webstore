@@ -11,27 +11,45 @@
  * Every plugin in this repo ships as a single `plugins/<id>/src/
  * index.js` file (see README's "How it works"), so cloning is just
  * "fetch that one file and drop it in as index.js" — no multi-file
- * crawl needed. That source itself may `import` things Code Studio's
- * preview can't resolve (npm packages like "jszip", or
- * "../../_shared/pluginKit.js" — outside any single project's own
- * file tree) — that's fine for editing/formatting/viewing errors, it
- * just means the live Preview may show a "Cannot resolve" error for
- * those specific imports until you remove/replace them, exactly the
- * same documented limitation runtime.js already carries.
+ * crawl needed. That source itself may `import`
+ * "../../_shared/pluginKit.js" (resolved as a built-in virtual
+ * module) or a package from runtime.js's own ALLOWED_BARE_PACKAGES
+ * list (e.g. "jszip", fetched live from esm.sh) — both preview fine
+ * out of the box. An import outside those two cases still shows a
+ * clear "Cannot resolve"/"not a supported preview library" error in
+ * the Console until you remove/replace it — see runtime.js's header
+ * for exactly what is and isn't supported.
  */
 const CATALOG_URL = "https://raw.githubusercontent.com/fachu2012/Anchoran-Webstore/main/catalog.json";
 const sourceUrl = (id) => `https://raw.githubusercontent.com/fachu2012/Anchoran-Webstore/main/plugins/${id}/src/index.js`;
 
-/** Fetches the live catalog's plugin list. Returns [] on any network failure (offline, blocked, GitHub hiccup) rather than throwing — callers show that as "couldn't load the list right now". */
+/**
+ * Anchoran Code Studio's own id — deliberately excluded from what
+ * "Import from Official" ever offers to clone, and refused outright
+ * if something still tries to fetch its source directly. Code
+ * Studio's own source is the IDE itself (the module resolver, the
+ * exact localStorage contract "My Creations" reads on the Anchoran OS
+ * side, how "Make It Official"/publishing work, …) — handing that out
+ * as an editable starting point would let anyone read it end to end
+ * looking for ways to abuse the mechanism, which no other plugin's
+ * source exposes.
+ */
+const RESTRICTED_IDS = new Set(["code-studio"]);
+
+/** Fetches the live catalog's plugin list, with Code Studio itself always excluded — see RESTRICTED_IDS. Returns [] on any network failure (offline, blocked, GitHub hiccup) rather than throwing — callers show that as "couldn't load the list right now". */
 export async function fetchOfficialCatalog() {
   const res = await fetch(CATALOG_URL);
   if (!res.ok) throw new Error(`GitHub returned ${res.status} fetching the catalog.`);
   const data = await res.json();
-  return Array.isArray(data.plugins) ? data.plugins : [];
+  const plugins = Array.isArray(data.plugins) ? data.plugins : [];
+  return plugins.filter((p) => !RESTRICTED_IDS.has(p.id));
 }
 
-/** Fetches one official plugin's real source. Throws on failure — callers show the message directly, there's nothing more specific to say. */
+/** Fetches one official plugin's real source. Throws on failure (including a restricted id, so a caller that somehow bypasses the catalog filter above still can't clone it) — callers show the message directly, there's nothing more specific to say. */
 export async function fetchOfficialSource(manifest) {
+  if (RESTRICTED_IDS.has(manifest.id)) {
+    throw new Error(`"${manifest.title}" can't be imported as a starting point for a fork.`);
+  }
   const res = await fetch(sourceUrl(manifest.id));
   if (!res.ok) throw new Error(`GitHub returned ${res.status} fetching "${manifest.id}"'s source.`);
   return res.text();

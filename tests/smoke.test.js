@@ -267,41 +267,27 @@ test("code-studio: Export builds a real .zip of the starter project without thro
   cleanup();
 });
 
-test("code-studio: Make It Official builds the publish package (formatted files + catalog-entry.json + README) without throwing", async () => {
+test('code-studio: "Run test on window" opens the project via sdk.openApp with a preview:<id> openPath, switches to the Console tab, and shows clear guidance when sdk.openApp is unavailable', async () => {
+  // Without sdk.openApp on this build of the host SDK: a clear, honest fallback message in the Console tab instead of silently doing nothing.
+  const noOpenApp = await mountPlugin("code-studio");
+  clickButtonWithText(noOpenApp.dom.window, noOpenApp.container, "Run test on window");
+  await waitUntil(() => noOpenApp.container.querySelector(".cs-console-line[data-level='error']"));
+  const fallback = noOpenApp.container.querySelector(".cs-console-line[data-level='error']");
+  assert.ok(fallback && fallback.textContent.includes("sdk.openApp"), "expected a fallback console error naming sdk.openApp when it's unavailable");
+  noOpenApp.cleanup();
+
+  // With sdk.openApp available: called with the right pluginId + a preview:-prefixed openPath, and the panel switches to Console.
   const calls = [];
-  const sdk = { version: "1.0.0", React, ReactDOM, Icon: () => null, IconTile: () => null, pushNotification: (title, message) => calls.push({ title, message }), getAccentColor: () => "#5B8DEF", getThemeMode: () => "dark" };
-  const { container, dom, cleanup } = await mountPlugin("code-studio", sdk);
-
-  let unhandled = null;
-  const onUnhandled = (err) => (unhandled = err);
-  process.once("unhandledRejection", onUnhandled);
-
-  clickButtonWithText(dom.window, container, "Make It Official");
-  // Slower than Export: this path runs Prettier twice per file (once
-  // for checkAllFiles's syntax check, again to actually format) plus
-  // a zip — cold-start Prettier parsing genuinely takes a while, and
-  // varies a lot under a loaded test run, hence polling rather than a
-  // single fixed sleep.
-  await waitUntil(() => calls.length > 0 || unhandled);
-
-  process.removeListener("unhandledRejection", onUnhandled);
-  assert.strictEqual(unhandled, null, `Make It Official threw/rejected: ${unhandled}`);
-  assert.ok(
-    calls.some((c) => c.title === "Code Studio" && c.message.includes("Make It Official") && c.message.includes("package")),
-    "expected a success notification once the official package finished generating"
-  );
-
-  cleanup();
-});
-
-test("code-studio: cleanup stops a running preview's own mount without throwing", async () => {
-  const { container, dom, cleanup } = await mountPlugin("code-studio");
-  clickButtonWithText(dom.window, container, "Run Preview");
-  await waitUntil(() => container.querySelector(".cs-preview-host")?.childNodes.length > 0);
-  await wait(50); // let React 18 fully settle its own post-mount render before synchronously unmounting below
-  // The starter template's mount() renders a counter button — Run Preview should have mounted it live into the Preview panel.
-  assert.ok(container.querySelector(".cs-preview-host"), "expected a preview host element");
-  assert.doesNotThrow(() => cleanup());
+  const sdkWithOpenApp = { ...fakeSdk(), openApp: (appId, options) => { calls.push({ appId, options }); return "fake-window-id"; } };
+  const withOpenApp = await mountPlugin("code-studio", sdkWithOpenApp);
+  clickButtonWithText(withOpenApp.dom.window, withOpenApp.container, "Run test on window");
+  await waitUntil(() => calls.length > 0);
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(calls[0].appId, "pluginHost");
+  assert.strictEqual(calls[0].options.pluginId, "code-studio");
+  assert.ok(calls[0].options.openPath.startsWith("preview:"), `expected an openPath starting with "preview:", got "${calls[0].options.openPath}"`);
+  assert.ok(withOpenApp.container.querySelector('.cs-panel-tab[data-active="true"]').textContent.includes("Console"), "expected the panel to switch to the Console tab");
+  assert.doesNotThrow(() => withOpenApp.cleanup());
 });
 
 test("code-studio: a project created and saved survives an unmount + remount with a fresh module instance (simulates reinstall) via real localStorage", async () => {
@@ -397,8 +383,28 @@ test("code-studio: ctx.openPath opens that exact project directly, overriding th
   cleanup();
 });
 
-test("code-studio: the Console panel captures a running preview's console.log and a real async runtime error, and Clear empties it", async () => {
-  const { container, dom, cleanup } = await mountPlugin("code-studio");
+// Simulates what PluginHost.tsx does on the real Anchoran OS side when
+// "Run test on window" calls sdk.openApp: mounts the SAME loaded plugin
+// module again into a second, real container — Anchoran OS loads a
+// plugin's dist/index.js once and calls mount() again per new window,
+// so this is a faithful stand-in for a genuinely separate window,
+// without needing a second real BrowserWindow in a jsdom test.
+function fakeOpenAppSdk(modRef) {
+  return {
+    ...fakeSdk(),
+    openApp: (appId, options) => {
+      const secondContainer = document.createElement("div");
+      document.body.appendChild(secondContainer);
+      modRef.current.mount(secondContainer, fakeSdk(), { windowId: "preview-fake", openPath: options.openPath });
+      return "fake-window-id";
+    },
+  };
+}
+
+test("code-studio: \"Run test on window\" makes that window's console.log and a real async runtime error show up live in the Console tab, and Clear empties it", async () => {
+  const modRef = {};
+  const { container, dom, cleanup, mod } = await mountPlugin("code-studio", fakeOpenAppSdk(modRef));
+  modRef.current = mod;
 
   const source = [
     'export function mount(container, sdk, ctx) {',
@@ -420,9 +426,9 @@ test("code-studio: the Console panel captures a running preview's console.log an
   ].join("\n");
   const view = container.querySelector(".cs-cm-host").__cmView;
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: source } });
-  await wait(60); // let the onChange -> setProject state update land before Run Preview reads it
+  await wait(60); // let the onChange -> setProject state update land before "Run test on window" reads it
 
-  clickButtonWithText(dom.window, container, "Run Preview");
+  clickButtonWithText(dom.window, container, "Run test on window");
   await waitUntil(() => container.querySelectorAll(".cs-console-line").length >= 2);
 
   const lines = Array.from(container.querySelectorAll(".cs-console-line"));
@@ -461,28 +467,6 @@ test("code-studio: mounting with ctx.openPath = 'preview:<projectId>' renders on
   assert.ok(container.textContent.includes("My New Plugin"), "expected the starter template's own UI, mounted directly");
 
   assert.doesNotThrow(() => cleanup());
-});
-
-test('code-studio: "Open in Window" calls sdk.openApp with a preview:<id> openPath when available, and shows clear guidance when it is not', async () => {
-  // Without sdk.openApp on this build of the host SDK: a clear, honest fallback message instead of silently doing nothing.
-  const noOpenApp = await mountPlugin("code-studio");
-  clickButtonWithText(noOpenApp.dom.window, noOpenApp.container, "Open in Window");
-  await wait(50);
-  const fallback = noOpenApp.container.querySelector(".cs-preview-error");
-  assert.ok(fallback && fallback.textContent.includes("sdk.openApp"), "expected a fallback message naming sdk.openApp when it's unavailable");
-  noOpenApp.cleanup();
-
-  // With sdk.openApp available: called with the right pluginId + a preview:-prefixed openPath.
-  const calls = [];
-  const sdkWithOpenApp = { ...fakeSdk(), openApp: (appId, options) => { calls.push({ appId, options }); return "fake-window-id"; } };
-  const withOpenApp = await mountPlugin("code-studio", sdkWithOpenApp);
-  clickButtonWithText(withOpenApp.dom.window, withOpenApp.container, "Open in Window");
-  await wait(50);
-  assert.strictEqual(calls.length, 1);
-  assert.strictEqual(calls[0].appId, "pluginHost");
-  assert.strictEqual(calls[0].options.pluginId, "code-studio");
-  assert.ok(calls[0].options.openPath.startsWith("preview:"), `expected an openPath starting with "preview:", got "${calls[0].options.openPath}"`);
-  withOpenApp.cleanup();
 });
 
 test("code-studio: New Project offers a Template selector with Empty App / Counter / Task List", async () => {
@@ -532,8 +516,20 @@ test("code-studio: choosing each template (Empty App / Counter / Task List) popu
   assert.ok(!empty.files["logic.js"] && !counter.files["logic.js"], "logic.js is specific to the Task List template, not the others");
 });
 
-test("code-studio: the Task List template actually mounts and runs in the Preview panel without throwing", async () => {
-  const { container, dom, cleanup } = await mountPlugin("code-studio");
+test('code-studio: the Task List template actually mounts and runs in the "Run test on window" window without throwing', async () => {
+  const modRef = {};
+  let secondContainer = null;
+  const sdk = {
+    ...fakeSdk(),
+    openApp: (appId, options) => {
+      secondContainer = document.createElement("div");
+      document.body.appendChild(secondContainer);
+      modRef.current.mount(secondContainer, fakeSdk(), { windowId: "preview-fake", openPath: options.openPath });
+      return "fake-window-id";
+    },
+  };
+  const { container, dom, cleanup, mod } = await mountPlugin("code-studio", sdk);
+  modRef.current = mod;
 
   clickButtonWithText(dom.window, container, "New");
   await wait(20);
@@ -549,16 +545,100 @@ test("code-studio: the Task List template actually mounts and runs in the Previe
   const onUnhandled = (err) => (unhandled = err);
   process.once("unhandledRejection", onUnhandled);
 
-  clickButtonWithText(dom.window, container, "Run Preview");
-  await waitUntil(() => container.querySelector(".cs-preview-host")?.childNodes.length > 0);
+  clickButtonWithText(dom.window, container, "Run test on window");
+  await waitUntil(() => secondContainer?.childNodes.length > 0);
   await wait(50);
 
   process.removeListener("unhandledRejection", onUnhandled);
   assert.strictEqual(unhandled, null, `Task List preview threw/rejected: ${unhandled}`);
-  assert.ok(!container.querySelector(".cs-preview-error"), "expected no preview error banner");
-  assert.ok(container.querySelector(".cs-preview-host").textContent.includes("Task List"), "expected the Task List template's own UI to have mounted live");
-  assert.ok(container.querySelector(".cs-preview-host").textContent.includes("No tasks yet"), "expected the Task List template's empty state to render");
+  assert.ok(!container.querySelector(".cs-console-line[data-level='error']"), "expected no error line in the Console tab");
+  assert.ok(secondContainer.textContent.includes("Task List"), "expected the Task List template's own UI to have mounted live in the separate window");
+  assert.ok(secondContainer.textContent.includes("No tasks yet"), "expected the Task List template's empty state to render");
 
   cleanup();
 });
 
+
+test('code-studio: "Import from Official" never offers or fetches Code Studio\'s own source, even if the live catalog somehow lists it', async () => {
+  // officialCatalog.js is a standalone ES module (fetch() only, no other
+  // project-internal imports) — tested directly via dynamic import() on
+  // its real source, rather than through a full mount + UI interaction,
+  // since nothing else in the suite mocks global.fetch yet and this is
+  // the most direct way to pin down the security guarantee itself.
+  const modUrl = require("node:url").pathToFileURL(path.resolve(__dirname, "../plugins/code-studio/src/officialCatalog.js")).href;
+  const { fetchOfficialCatalog, fetchOfficialSource } = await import(modUrl);
+
+  const originalFetch = global.fetch;
+  try {
+    // A catalog that (deliberately, for this test) lists code-studio
+    // alongside a normal plugin — simulating a compromised or simply
+    // stale catalog.json, which must never be trusted on its own.
+    global.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        plugins: [
+          { id: "code-studio", title: "Anchoran Code Studio", version: "1.0.0" },
+          { id: "calculator", title: "Calculator", version: "1.0.0" },
+        ],
+      }),
+    });
+
+    const list = await fetchOfficialCatalog();
+    assert.ok(!list.some((p) => p.id === "code-studio"), "Code Studio must never appear in the Import from Official list");
+    assert.ok(list.some((p) => p.id === "calculator"), "a normal plugin should still be listed normally");
+
+    // Defense in depth: even if some caller bypasses the catalog filter
+    // above and calls fetchOfficialSource() directly with Code Studio's
+    // own manifest, it must refuse rather than fetch anything.
+    let threw = null;
+    try {
+      await fetchOfficialSource({ id: "code-studio", title: "Anchoran Code Studio" });
+    } catch (err) {
+      threw = err;
+    }
+    assert.ok(threw, "fetchOfficialSource() should throw for a restricted id instead of fetching it");
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("code-studio runtime: a project can import \"_shared/pluginKit.js\" (any relative depth) and an allowlisted npm package (\"jszip\"), while a non-allowlisted bare specifier fails with a clear message", async () => {
+  const modUrl = require("node:url").pathToFileURL(path.resolve(__dirname, "../plugins/code-studio/src/runtime.js")).href;
+  const { runProject, preloadBareImports } = await import(modUrl);
+
+  const files = {
+    "index.js": [
+      'import { injectStyle, SHELL_CSS, pluginStorage } from "../../_shared/pluginKit.js";',
+      'import JSZip from "jszip";',
+      "export function mount() {",
+      "  return { injectStyle, SHELL_CSS, pluginStorage, JSZip };",
+      "}",
+    ].join("\n"),
+  };
+
+  // Node's own import() can't fetch https: URLs (a real browser/Electron
+  // capability, not a bare-Node one) — stub the importer instead of
+  // hitting esm.sh for real, exactly what preloadBareImports' optional
+  // second argument exists for.
+  const fakeImporter = async (url) => {
+    if (url.includes("jszip")) return { default: class FakeJSZip {} };
+    throw new Error(`unexpected import in test: ${url}`);
+  };
+
+  const bareModules = await preloadBareImports(files, fakeImporter);
+  const exported = runProject(files, "index.js", bareModules);
+  const result = exported.mount();
+
+  assert.strictEqual(typeof result.injectStyle, "function", "expected pluginKit's real injectStyle via the _shared/pluginKit.js builtin");
+  assert.ok(typeof result.SHELL_CSS === "string" && result.SHELL_CSS.includes(".pk-root"), "expected pluginKit's real SHELL_CSS");
+  assert.strictEqual(typeof result.pluginStorage, "function", "expected pluginKit's real pluginStorage");
+  assert.ok(result.JSZip, "expected jszip's default export to resolve, since it's on the allowlist");
+
+  const badFiles = { "index.js": 'import leftPad from "left-pad";\nexport function mount() { return leftPad; }' };
+  const badBareModules = await preloadBareImports(badFiles, fakeImporter);
+  assert.throws(
+    () => runProject(badFiles, "index.js", badBareModules),
+    /not a supported preview library/,
+    "expected a clear allowlist error for a bare specifier that isn't on ALLOWED_BARE_PACKAGES"
+  );
+});

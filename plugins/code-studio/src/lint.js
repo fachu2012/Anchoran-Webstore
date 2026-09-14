@@ -1,44 +1,52 @@
 /**
- * Real syntax checking + real formatting, both via Prettier's browser
- * "standalone" build + its babel parser plugin — a genuine, dependable
- * tool bundled in (this is a real esbuild bundle, so a real npm
- * dependency is the right call here over a hand-rolled formatter).
- * Prettier's babel parser also gives us "view errors" for free and
- * better than `new Function(...)`: `new Function` can't parse ESM
- * `import`/`export` syntax at all (throws on *every* real plugin
- * source file for the wrong reason), while Prettier's babel parser
- * handles modern JS/JSX/ESM and reports a real SyntaxError with
- * `.loc.start.line` / `.loc.start.column`.
+ * Real syntax checking + real formatting, via Prettier's browser
+ * "standalone" build + its real language parser plugins — a genuine,
+ * dependable tool bundled in (this is a real esbuild bundle, so a
+ * real npm dependency is the right call here over a hand-rolled
+ * formatter/parser). Prettier's parsers also give us "view errors"
+ * for free and better than `new Function(...)`: `new Function` can't
+ * parse ESM `import`/`export` syntax at all (throws on *every* real
+ * plugin source file for the wrong reason), while these report a real
+ * SyntaxError with `.loc.start.line` / `.loc.start.column`.
+ *
+ * The PARSER is chosen per file, by extension — a `.ts`/`.tsx` file
+ * genuinely uses TypeScript's own parser (type annotations, `as`
+ * casts, etc. are real syntax errors under the plain "babel" parser),
+ * it does not just get silently treated as JavaScript. See
+ * typescript.js for what happens to that file's TYPES before it can
+ * actually run (Prettier only checks/formats — it never strips them).
  */
 import * as prettier from "prettier/standalone";
 import babelPlugin from "prettier/plugins/babel";
+import typescriptPlugin from "prettier/plugins/typescript";
 import estreePlugin from "prettier/plugins/estree";
 
-const PRETTIER_OPTIONS = {
-  parser: "babel",
-  plugins: [babelPlugin, estreePlugin],
+const BASE_OPTIONS = {
   printWidth: 100,
   tabWidth: 2,
   semi: true,
   singleQuote: false,
 };
 
-function isJsLikePath(path) {
-  return /\.(js|jsx|mjs|cjs)$/i.test(path);
+/** Which Prettier parser + plugin set a path's real language needs. `null` for anything Code Studio doesn't understand as code (README.md, JSON, …). */
+function optionsFor(path) {
+  if (/\.(ts|tsx|mts|cts)$/i.test(path)) return { ...BASE_OPTIONS, parser: "typescript", plugins: [typescriptPlugin, estreePlugin] };
+  if (/\.(js|jsx|mjs|cjs)$/i.test(path)) return { ...BASE_OPTIONS, parser: "babel", plugins: [babelPlugin, estreePlugin] };
+  return null;
 }
 
 /**
  * Parses+formats `code` just to surface any real SyntaxError. Returns
  * `null` when the code is syntactically valid, otherwise
  * `{ message, line, column }` (line/column are 1-based, straight from
- * Babel's error location, or null when Prettier couldn't locate one).
- * Non-JS files (e.g. README.md) are always reported valid — Code
- * Studio only understands JS/JSX syntax, not markdown/JSON grammar.
+ * the parser's error location, or null when Prettier couldn't locate
+ * one). Non-code files (e.g. README.md) are always reported valid.
  */
 export async function checkSyntax(path, code) {
-  if (!isJsLikePath(path)) return null;
+  const options = optionsFor(path);
+  if (!options) return null;
   try {
-    await prettier.format(code, PRETTIER_OPTIONS);
+    await prettier.format(code, options);
     return null;
   } catch (err) {
     const loc = err && (err.loc?.start || err.loc);
@@ -50,8 +58,9 @@ export async function checkSyntax(path, code) {
   }
 }
 
-/** Formats `code` with Prettier. Throws the same real SyntaxError checkSyntax would report — callers should checkSyntax (or catch) before trusting the result. Non-JS files pass through unchanged (Prettier's babel parser can't help them, and this plugin doesn't ship a markdown/JSON printer). */
+/** Formats `code` with Prettier, using the real parser for that path's actual language. Throws the same real SyntaxError checkSyntax would report — callers should checkSyntax (or catch) before trusting the result. Files Code Studio doesn't understand as code pass through unchanged. */
 export async function formatCode(path, code) {
-  if (!isJsLikePath(path)) return code;
-  return prettier.format(code, PRETTIER_OPTIONS);
+  const options = optionsFor(path);
+  if (!options) return code;
+  return prettier.format(code, options);
 }

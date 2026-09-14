@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this repo adheres to classic [Semantic Versioning](https://semver.org/) (`v#.#.#`) —
 a separate, independent version line from Anchoran OS's own "Version # | Build #H#.#" one.
 
+## [2.5.0] - 2026-09-14
+
+### Security
+- **Code Studio's "Import from Official" can no longer clone Code
+  Studio's own source.** It always offered every published plugin as
+  a forkable starting point, Code Studio itself included — exposing
+  its own internals (module resolver, the exact `localStorage`
+  contract "My Creations" reads, how publishing works) would let
+  anyone study it end-to-end looking for ways to abuse the mechanism.
+  `officialCatalog.js` now excludes it from the list and refuses to
+  fetch its source even if called directly.
+
+### Added
+- **Code Studio's Preview can now run projects that import
+  `_shared/pluginKit.js`** (this repo's own shared helper, used by
+  most real plugins) **or a curated allowlist of ~30 common npm
+  packages** (jszip, lodash, dayjs, zod, date-fns, papaparse, marked,
+  and more — see `runtime.js`'s `ALLOWED_BARE_PACKAGES`), fetched live
+  from esm.sh. Deliberately an allowlist, not an open resolver, so a
+  project's own source can never make the Preview fetch and run
+  arbitrary remote code.
+- **Real TypeScript support**: `.ts`/`.tsx` files get real TypeScript
+  syntax highlighting, checking and formatting (Prettier's own
+  `typescript` parser), and their types are stripped (via Sucrase) so
+  they run in Preview and ship as real, plain `.js` in Export — this
+  repo, and Anchoran OS itself, only ever run JavaScript, so authoring
+  in TypeScript is a Code Studio-only convenience.
+- **"Run test on window"** replaces the old separate "Run Preview" /
+  "Open in Window" buttons: one button opens the project in a real,
+  separate Anchoran window (in the foreground) while Code Studio's own
+  Console tab (in the background) shows that window's console output
+  and runtime errors live.
+- **Copy** button on the Console panel, to copy its full output.
+- Removed the **"Make It Official"** button — Export already covers
+  getting your project's files out of Code Studio.
+
 ## [2.4.0] - 2026-09-14
 
 ### Added

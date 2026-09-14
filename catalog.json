@@ -633,12 +633,12 @@
     {
       "id": "code-studio",
       "title": "Anchoran Code Studio",
-      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete, syntax checking, Prettier formatting, a live preview with a console/output panel, opening the app in its own real window, export or a ready-to-publish \"Make It Official\" package, and starter templates (Empty App, Counter, Task List) for New Project.",
+      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete and real TypeScript support, syntax checking, Prettier formatting, \"Run test on window\" (runs the project in its own real window with live console output), export, and starter templates (Empty App, Counter, Task List) for New Project.",
       "author": "Fachun Corporation",
       "icon": "terminal",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "minAnchoranVersion": "3.5.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.4.0/code-studio.js",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.5.0/code-studio.js",
       "category": "System",
       "recentChanges": [
         {
@@ -652,6 +652,10 @@
         {
           "version": "1.2.0",
           "notes": "New Project now offers starter templates — Empty App, Counter (React state example) and Task List (add/complete/delete, persisted to localStorage, split into logic.js + index.js) — instead of always starting from a blank file."
+        },
+        {
+          "version": "1.3.0",
+          "notes": "\"Import from Official\" can no longer clone Code Studio's own source. Preview can now import this repo's _shared/pluginKit.js and a curated allowlist of ~30 npm packages. Real TypeScript (.ts/.tsx) support. \"Run Preview\"/\"Open in Window\" merged into one \"Run test on window\" button. Console panel gains Copy. Removed \"Make It Official\" (Export covers it)."
         }
       ]
     }

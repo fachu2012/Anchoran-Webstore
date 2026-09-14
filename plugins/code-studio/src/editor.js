@@ -25,17 +25,27 @@ import { indentOnInput, bracketMatching, syntaxHighlighting, defaultHighlightSty
 import { oneDark } from "@codemirror/theme-one-dark";
 
 const themeCompartment = new Compartment();
+const languageCompartment = new Compartment();
 
 function themeExtension(themeMode) {
   return themeMode === "dark" ? oneDark : syntaxHighlighting(defaultHighlightStyle);
+}
+
+/** Real TypeScript language support (types, `as`/`satisfies`, `interface`, …) for `.ts`/`.tsx`, plain JS/JSX for everything else — same `@codemirror/lang-javascript` package covers both, it just needs telling which grammar a given file actually is. */
+function languageExtensionFor(path) {
+  const typescript = /\.(ts|tsx)$/i.test(path || "");
+  const jsx = typescript ? /\.tsx$/i.test(path) : true;
+  return javascript({ jsx, typescript });
 }
 
 /**
  * Creates a CodeMirror EditorView mounted into `parent`.
  * `onChange(text)` fires on every document-changing edit — index.js
  * debounces the expensive bits (syntax check) itself, this stays sync.
+ * `path` picks the initial language grammar (see setViewLanguage to
+ * change it later, e.g. when switching to a different open file).
  */
-export function createCodeMirrorView({ parent, doc, themeMode, onChange, readOnly }) {
+export function createCodeMirrorView({ parent, doc, path, themeMode, onChange, readOnly }) {
   const view = new EditorView({
     state: EditorState.create({
       doc,
@@ -50,7 +60,7 @@ export function createCodeMirrorView({ parent, doc, themeMode, onChange, readOnl
         bracketMatching(),
         closeBrackets(),
         autocompletion(),
-        javascript({ jsx: true }),
+        languageCompartment.of(languageExtensionFor(path)),
         themeCompartment.of(themeExtension(themeMode)),
         EditorView.lineWrapping,
         EditorView.editable.of(!readOnly),
@@ -74,4 +84,9 @@ export function setViewContent(view, text) {
 
 export function setViewTheme(view, themeMode) {
   view.dispatch({ effects: themeCompartment.reconfigure(themeExtension(themeMode)) });
+}
+
+/** Reconfigures the editor's language grammar for `path` — call whenever the visible file changes (opening a different tab), same pattern as setViewTheme above. */
+export function setViewLanguage(view, path) {
+  view.dispatch({ effects: languageCompartment.reconfigure(languageExtensionFor(path)) });
 }
