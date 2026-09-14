@@ -134,8 +134,14 @@ export async function preloadBareImports(files, importer = (url) => import(/* @v
   const specs = new Set();
   const bareImportRe = /\bimport\s+(?:[\w$*{}\s,]+\s+from\s+)?["']([^./"'][^"']*)["']/g;
   const bareRequireRe = /\brequire\(\s*["']([^./"'][^"']*)["']\s*\)/g;
+  // `export { a, b as c } from "pkg"` / `export * from "pkg"` — a
+  // re-export never contains the word "import", so the pattern above
+  // alone misses it; a project re-exporting straight from an
+  // allowlisted package (uncommon, but valid ESM) still needs it
+  // preloaded the same as a normal import would.
+  const bareReExportRe = /\bexport\s+(?:\*|\{[^}]*\})\s+from\s+["']([^./"'][^"']*)["']/g;
   for (const source of Object.values(files)) {
-    for (const re of [bareImportRe, bareRequireRe]) {
+    for (const re of [bareImportRe, bareRequireRe, bareReExportRe]) {
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(source))) specs.add(m[1]);
