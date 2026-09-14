@@ -83,6 +83,13 @@ const CSS =
 .cs-preview-host{position:absolute;inset:0;border:1px dashed var(--anchoran-border,#2a2c33);border-radius:6px;overflow:auto;}
 .cs-preview-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11.5px;text-align:center;padding:10px;}
 .cs-preview-error{color:#E5484D;font-size:11px;white-space:pre-wrap;padding:8px;}
+.cs-console-toolbar{display:flex;justify-content:flex-end;margin-bottom:6px;}
+.cs-console-list{display:flex;flex-direction:column;font-family:'Cascadia Code',Consolas,monospace;font-size:11px;}
+.cs-console-line{display:flex;gap:8px;padding:3px 4px;border-bottom:1px solid var(--anchoran-border,#2a2c33);white-space:pre-wrap;word-break:break-word;color:var(--anchoran-text-primary,#F3F4F6);}
+.cs-console-ts{opacity:.45;flex-shrink:0;}
+.cs-console-line[data-level="error"]{color:#E5484D;}
+.cs-console-line[data-level="warn"]{color:#F5A623;}
+.cs-console-line[data-level="info"]{color:var(--anchoran-accent,#5B8DEF);}
 .cs-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:20;}
 .cs-modal{width:320px;max-width:90%;background:var(--anchoran-surface,#1c1d22);border:1px solid var(--anchoran-border,#2a2c33);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;}
 .cs-modal-title{font-size:13px;font-weight:600;}
@@ -104,7 +111,51 @@ const CSS =
 const SYNTAX_CHECK_DEBOUNCE_MS = 450;
 const SAVE_DEBOUNCE_MS = 600;
 
+/**
+ * `ctx.openPath` normally carries a plain project id — "My Creations"
+ * (Anchoran OS's Webstore sidebar) opens Code Studio straight into
+ * that project's IDE this way. This prefix gives that SAME field a
+ * second, distinct meaning: "Open in Window" (see the App component's
+ * openInWindow()) opens a SECOND, independent Code Studio window whose
+ * `ctx.openPath` is `PREVIEW_WINDOW_PREFIX + projectId` instead — this
+ * plugin's own mount() recognizes that prefix below and, instead of
+ * rendering the IDE at all, loads that one project from storage,
+ * builds it via runProject() (the exact same in-memory module runner
+ * the embedded Preview panel uses — see runtime.js), and mounts its
+ * `mount()` directly into `container`, filling the whole window with
+ * nothing but the running app. Genuinely a real, separate Anchoran
+ * window (its own titlebar, its own taskbar entry, resizable/movable
+ * independently of the Code Studio window that spawned it) — not a
+ * simulation — but still running the project's CURRENT in-memory
+ * source, not a published/downloaded plugin build.
+ */
+const PREVIEW_WINDOW_PREFIX = "preview:";
+
+/** The "Open in Window" side of PREVIEW_WINDOW_PREFIX above: renders nothing but the previewed project's own mount() output, filling `container` — no IDE chrome (explorer/tabs/Problems/Console) at all. */
+function mountPreviewOnlyWindow(container, sdk, ctx) {
+  const projectId = ctx.openPath.slice(PREVIEW_WINDOW_PREFIX.length);
+  const project = store.getProject(projectId);
+  if (!project) {
+    container.textContent = "This project no longer exists — it may have been deleted from Code Studio or from the Webstore's My Creations.";
+    return () => {};
+  }
+  try {
+    const exported = runProject(project.files, project.entryPath);
+    if (typeof exported.mount !== "function") {
+      throw new Error(`"${project.entryPath}" doesn't export a mount() function.`);
+    }
+    const cleanup = exported.mount(container, sdk, { windowId: ctx.windowId });
+    return typeof cleanup === "function" ? cleanup : () => {};
+  } catch (err) {
+    container.textContent = `Couldn't run "${project.name}": ${err instanceof Error ? err.message : String(err)}`;
+    return () => {};
+  }
+}
+
 export function mount(container, sdk, ctx) {
+  if (ctx?.openPath && ctx.openPath.startsWith(PREVIEW_WINDOW_PREFIX)) {
+    return mountPreviewOnlyWindow(container, sdk, ctx);
+  }
   injectStyle("code-studio", CSS);
   const { React, ReactDOM, Icon } = sdk;
   const { createElement: h, useState, useEffect, useRef, useCallback, useMemo } = React;
@@ -376,8 +427,10 @@ export function mount(container, sdk, ctx) {
     const [modal, setModal] = useState(null);
     const [previewState, setPreviewState] = useState("idle"); // idle | running | error
     const [previewError, setPreviewError] = useState(null);
+    const [consoleLines, setConsoleLines] = useState([]);
     const previewHostRef = useRef(null);
     const previewCleanupRef = useRef(null);
+    const consoleRestoreRef = useRef(null); // set while a preview is running: undoes the console.*/window listener interception below
     const saveTimerRef = useRef(null);
     const checkTimersRef = useRef({});
     const projectRef = useRef(null);
@@ -400,6 +453,11 @@ export function mount(container, sdk, ctx) {
           previewCleanupRef.current?.();
         } catch {
           /* a broken preview cleanup shouldn't block this window from closing */
+        }
+        try {
+          consoleRestoreRef.current?.();
+        } catch {
+          /* same — restoring console/listener interception must never block closing */
         }
       };
     }, []);
@@ -582,6 +640,72 @@ export function mount(container, sdk, ctx) {
       }
     }
 
+    // Appends one line to the Console/Output panel. Used both by the
+    // console.*/window-error interception runPreview() installs below,
+    // and directly for a synchronous mount() throw (caught in
+    // runPreview's own catch) — so every way a preview can fail shows
+    // up in one place, not split between "Problems" (static syntax
+    // only) and some errors silently only hitting the Preview banner.
+    function pushConsole(level, message) {
+      setConsoleLines((lines) => [...lines, { level, message, ts: Date.now() }]);
+    }
+
+    function formatConsoleArgs(args) {
+      return Array.from(args)
+        .map((a) => {
+          if (typeof a === "string") return a;
+          if (a instanceof Error) return a.stack || a.message;
+          try {
+            return JSON.stringify(a);
+          } catch {
+            return String(a);
+          }
+        })
+        .join(" ");
+    }
+
+    /**
+     * Wraps console.log/warn/error/info (the SAME global `console`
+     * object runtime.js's module factories are handed as their own
+     * `console` parameter, so this catches a project's console calls
+     * either way) to mirror every call into the Console panel while
+     * still calling the real console method, and adds `window`
+     * "error"/"unhandledrejection" listeners for runtime errors that
+     * happen AFTER mount() returns (a click handler that throws, a
+     * rejected promise, etc — mount() itself throwing SYNCHRONOUSLY is
+     * caught directly in runPreview's own try/catch instead, since
+     * that happens before these listeners would even be attached).
+     * Returns a restore() function — callers MUST call it exactly
+     * once when the preview stops (stopPreview, or this window
+     * closing) or the interception leaks past the preview's lifetime.
+     */
+    function interceptPreviewConsole() {
+      const originalConsole = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+      for (const level of ["log", "warn", "error", "info"]) {
+        console[level] = (...args) => {
+          originalConsole[level].apply(console, args);
+          pushConsole(level, formatConsoleArgs(args));
+        };
+      }
+      const onWindowError = (e) => {
+        pushConsole("error", `Uncaught: ${e?.error?.stack || e?.error?.message || e?.message || "unknown error"}`);
+      };
+      const onUnhandledRejection = (e) => {
+        const reason = e?.reason;
+        pushConsole("error", `Unhandled promise rejection: ${reason instanceof Error ? reason.stack || reason.message : String(reason)}`);
+      };
+      window.addEventListener("error", onWindowError);
+      window.addEventListener("unhandledrejection", onUnhandledRejection);
+      return () => {
+        console.log = originalConsole.log;
+        console.warn = originalConsole.warn;
+        console.error = originalConsole.error;
+        console.info = originalConsole.info;
+        window.removeEventListener("error", onWindowError);
+        window.removeEventListener("unhandledrejection", onUnhandledRejection);
+      };
+    }
+
     function stopPreview() {
       try {
         previewCleanupRef.current?.();
@@ -589,6 +713,12 @@ export function mount(container, sdk, ctx) {
         /* a broken cleanup shouldn't block stopping the preview */
       }
       previewCleanupRef.current = null;
+      try {
+        consoleRestoreRef.current?.();
+      } catch {
+        /* same — must not block stopping the preview */
+      }
+      consoleRestoreRef.current = null;
       if (previewHostRef.current) previewHostRef.current.innerHTML = "";
       setPreviewState("idle");
       setPreviewError(null);
@@ -597,6 +727,7 @@ export function mount(container, sdk, ctx) {
     async function runPreview() {
       if (!project) return;
       stopPreview();
+      setConsoleLines([]);
       setPanelTab("preview");
       const fresh = await checkAllFiles(project);
       const hasErrors = Object.values(fresh).some(Boolean);
@@ -606,6 +737,7 @@ export function mount(container, sdk, ctx) {
         setPreviewError("Fix the syntax problems listed in the Problems tab before running the preview.");
         return;
       }
+      const restoreConsole = interceptPreviewConsole();
       try {
         const exported = runProject(project.files, project.entryPath);
         if (typeof exported.mount !== "function") {
@@ -614,11 +746,37 @@ export function mount(container, sdk, ctx) {
         const previewSdk = { ...sdk };
         const cleanup = exported.mount(previewHostRef.current, previewSdk, { windowId: `${ctx?.windowId ?? "code-studio"}:preview` });
         previewCleanupRef.current = typeof cleanup === "function" ? cleanup : null;
+        consoleRestoreRef.current = restoreConsole; // keep interception live for as long as the preview keeps running
         setPreviewState("running");
       } catch (err) {
+        const message = err instanceof Error ? err.stack || err.message : String(err);
+        pushConsole("error", message);
+        restoreConsole(); // mount() never actually started running, so nothing to keep intercepting
         setPreviewState("error");
-        setPreviewError(err instanceof Error ? err.stack || err.message : String(err));
+        setPreviewError(message);
       }
+    }
+
+    /**
+     * Opens a SECOND, real, independent Anchoran window running this
+     * project's current in-memory source — see PREVIEW_WINDOW_PREFIX
+     * and mountPreviewOnlyWindow() above for how that window renders.
+     * `sdk.openApp` is not part of the documented App SDK (see this
+     * repo's README / anchoranSDK.ts) as of this writing — it's called
+     * defensively so this button degrades to a clear explanation
+     * instead of silently doing nothing on an Anchoran OS build that
+     * doesn't expose it yet.
+     */
+    function openInWindow() {
+      if (!project) return;
+      if (typeof sdk.openApp !== "function") {
+        setPanelTab("preview");
+        setPreviewError(
+          'Opening a separate window needs a small addition to the Anchoran App SDK ("sdk.openApp") that this build of Anchoran OS doesn\'t expose yet — use the embedded Preview panel above for now.'
+        );
+        return;
+      }
+      sdk.openApp("pluginHost", { pluginId: "code-studio", title: project.name, openPath: `${PREVIEW_WINDOW_PREFIX}${project.id}` });
     }
 
     async function handleExport() {
@@ -741,6 +899,7 @@ export function mount(container, sdk, ctx) {
 
     const tree = useMemo(() => (project ? store.buildTree(project.files) : null), [project]);
     const problemCount = Object.values(problems).filter(Boolean).length;
+    const consoleErrorCount = consoleLines.filter((l) => l.level === "error").length;
 
     if (!project) return h("div", { className: "cs-empty-editor" }, "Loading Code Studio…");
 
@@ -768,6 +927,7 @@ export function mount(container, sdk, ctx) {
         previewState === "running"
           ? h("button", { className: "cs-btn", onClick: stopPreview }, "Stop Preview")
           : h("button", { className: "cs-btn", onClick: runPreview }, "Run Preview"),
+        h("button", { className: "cs-btn", onClick: openInWindow, title: "Open this project in its own real Anchoran window" }, "Open in Window"),
         h("button", { className: "cs-btn", onClick: handleExport }, "Export"),
         h("button", { className: "cs-btn cs-btn-accent", style: { background: accent, color: "#fff" }, onClick: handleMakeOfficial }, "Make It Official")
       ),
@@ -849,12 +1009,41 @@ export function mount(container, sdk, ctx) {
                 "Problems",
                 problemCount > 0 && h("span", { className: "cs-panel-badge" }, problemCount)
               ),
-              h("div", { className: "cs-panel-tab", "data-active": String(panelTab === "preview"), onClick: () => setPanelTab("preview") }, "Preview")
+              h("div", { className: "cs-panel-tab", "data-active": String(panelTab === "preview"), onClick: () => setPanelTab("preview") }, "Preview"),
+              h(
+                "div",
+                { className: "cs-panel-tab", "data-active": String(panelTab === "console"), onClick: () => setPanelTab("console") },
+                "Console",
+                consoleErrorCount > 0 && h("span", { className: "cs-panel-badge" }, consoleErrorCount)
+              )
             ),
             h(
               "div",
               { className: "cs-panel-body", style: { display: panelTab === "problems" ? "block" : "none" } },
               h(ProblemsPanel, { problems, onJump: openFile })
+            ),
+            h(
+              "div",
+              { className: "cs-panel-body", style: { display: panelTab === "console" ? "block" : "none" } },
+              h(
+                "div",
+                { className: "cs-console-toolbar" },
+                h("button", { className: "cs-btn", onClick: () => setConsoleLines([]) }, "Clear")
+              ),
+              consoleLines.length === 0
+                ? h("div", { className: "cs-problem-ok" }, "No output yet — run the preview to see console logs and runtime errors here, live.")
+                : h(
+                    "div",
+                    { className: "cs-console-list" },
+                    consoleLines.map((entry, i) =>
+                      h(
+                        "div",
+                        { key: i, className: "cs-console-line", "data-level": entry.level },
+                        h("span", { className: "cs-console-ts" }, new Date(entry.ts).toISOString().slice(11, 23)),
+                        h("span", { className: "cs-console-msg" }, entry.message)
+                      )
+                    )
+                  )
             ),
             h(
               "div",

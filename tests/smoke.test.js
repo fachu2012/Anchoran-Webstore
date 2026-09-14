@@ -297,7 +297,8 @@ test("code-studio: Make It Official builds the publish package (formatted files 
 test("code-studio: cleanup stops a running preview's own mount without throwing", async () => {
   const { container, dom, cleanup } = await mountPlugin("code-studio");
   clickButtonWithText(dom.window, container, "Run Preview");
-  await wait(200);
+  await waitUntil(() => container.querySelector(".cs-preview-host")?.childNodes.length > 0);
+  await wait(50); // let React 18 fully settle its own post-mount render before synchronously unmounting below
   // The starter template's mount() renders a counter button — Run Preview should have mounted it live into the Preview panel.
   assert.ok(container.querySelector(".cs-preview-host"), "expected a preview host element");
   assert.doesNotThrow(() => cleanup());
@@ -394,5 +395,93 @@ test("code-studio: ctx.openPath opens that exact project directly, overriding th
   assert.strictEqual(select.value, projectB.id, "ctx.openPath should load Project B directly, not the last-active Project A");
 
   cleanup();
+});
+
+test("code-studio: the Console panel captures a running preview's console.log and a real async runtime error, and Clear empties it", async () => {
+  const { container, dom, cleanup } = await mountPlugin("code-studio");
+
+  const source = [
+    'export function mount(container, sdk, ctx) {',
+    '  console.log("hello-from-preview-test");',
+    // window.setTimeout, not bare setTimeout: in a real single-realm
+    // browser/Electron renderer these are identical, but in this
+    // Node-based jsdom test they are NOT — bare setTimeout resolves to
+    // Node's own timer (an uncaught throw there crashes the test
+    // process), while window.setTimeout is jsdom's own, whose thrown
+    // callback jsdom correctly turns into a window "error" event (the
+    // interception in index.js listens on `window`, matching this).
+    '  window.setTimeout(() => { throw new Error("boom-runtime-error"); }, 5);',
+    '  const div = document.createElement("div");',
+    '  div.textContent = "console test running";',
+    '  container.appendChild(div);',
+    '  return () => {};',
+    "}",
+    "",
+  ].join("\n");
+  const view = container.querySelector(".cs-cm-host").__cmView;
+  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: source } });
+  await wait(60); // let the onChange -> setProject state update land before Run Preview reads it
+
+  clickButtonWithText(dom.window, container, "Run Preview");
+  await waitUntil(() => container.querySelectorAll(".cs-console-line").length >= 2);
+
+  const lines = Array.from(container.querySelectorAll(".cs-console-line"));
+  const logLine = lines.find((l) => l.getAttribute("data-level") === "log" && l.textContent.includes("hello-from-preview-test"));
+  const errorLine = lines.find((l) => l.getAttribute("data-level") === "error" && l.textContent.includes("boom-runtime-error"));
+  assert.ok(logLine, "expected the preview's console.log to appear in the Console panel");
+  assert.ok(errorLine, "expected the preview's uncaught async runtime error to appear in the Console panel");
+
+  clickButtonWithText(dom.window, container, "Clear");
+  await wait(20);
+  assert.strictEqual(container.querySelectorAll(".cs-console-line").length, 0, "expected Clear to empty the Console panel");
+
+  cleanup();
+});
+
+test("code-studio: mounting with ctx.openPath = 'preview:<projectId>' renders only the running project, no IDE chrome at all", async () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "https://anchoran.local/" });
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.navigator = dom.window.navigator;
+  installJsdomPolyfills(dom.window);
+
+  const storeModPath = path.join(__dirname, "..", "plugins", "code-studio", "src", "store.js");
+  const store = await import(`${require("url").pathToFileURL(storeModPath).href}?t=${Date.now()}`);
+  const project = store.createProject({ name: "Preview Window Project" });
+
+  const modPath = path.join(__dirname, "..", "plugins", "code-studio", "dist", "index.js");
+  const mod = await import(`${require("url").pathToFileURL(modPath).href}?t=${Date.now()}`);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const cleanup = mod.mount(container, fakeSdk(), { windowId: "preview-window", openPath: `preview:${project.id}` });
+  await wait(80);
+
+  assert.ok(!container.querySelector(".cs-topbar"), "expected no IDE topbar in a preview-only window");
+  assert.ok(!container.querySelector(".cs-sidebar"), "expected no IDE file explorer in a preview-only window");
+  assert.ok(container.textContent.includes("My New Plugin"), "expected the starter template's own UI, mounted directly");
+
+  assert.doesNotThrow(() => cleanup());
+});
+
+test('code-studio: "Open in Window" calls sdk.openApp with a preview:<id> openPath when available, and shows clear guidance when it is not', async () => {
+  // Without sdk.openApp on this build of the host SDK: a clear, honest fallback message instead of silently doing nothing.
+  const noOpenApp = await mountPlugin("code-studio");
+  clickButtonWithText(noOpenApp.dom.window, noOpenApp.container, "Open in Window");
+  await wait(50);
+  const fallback = noOpenApp.container.querySelector(".cs-preview-error");
+  assert.ok(fallback && fallback.textContent.includes("sdk.openApp"), "expected a fallback message naming sdk.openApp when it's unavailable");
+  noOpenApp.cleanup();
+
+  // With sdk.openApp available: called with the right pluginId + a preview:-prefixed openPath.
+  const calls = [];
+  const sdkWithOpenApp = { ...fakeSdk(), openApp: (appId, options) => { calls.push({ appId, options }); return "fake-window-id"; } };
+  const withOpenApp = await mountPlugin("code-studio", sdkWithOpenApp);
+  clickButtonWithText(withOpenApp.dom.window, withOpenApp.container, "Open in Window");
+  await wait(50);
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(calls[0].appId, "pluginHost");
+  assert.strictEqual(calls[0].options.pluginId, "code-studio");
+  assert.ok(calls[0].options.openPath.startsWith("preview:"), `expected an openPath starting with "preview:", got "${calls[0].options.openPath}"`);
+  withOpenApp.cleanup();
 });
 

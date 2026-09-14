@@ -374,7 +374,7 @@
     {
       "id": "code-studio",
       "title": "Anchoran Code Studio",
-      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete, syntax checking, Prettier formatting, a live preview, and export or a ready-to-publish \"Make It Official\" package.",
+      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete, syntax checking, Prettier formatting, a live preview with a console/output panel, opening the app in its own real window, and export or a ready-to-publish \"Make It Official\" package.",
       "author": "Fachun Corporation",
       "icon": "terminal",
       "version": "1.0.0",

@@ -38,6 +38,28 @@ a separate, independent version line from Anchoran OS's own "Version # | Build #
     contract Anchoran OS's own Webstore "My Creations" section reads
     directly (same origin, no IPC) to list and manage these projects
     without opening Code Studio at all — see `store.js`'s header.
+  - A **Console** panel next to Problems/Preview: while a preview is
+    running, it mirrors every `console.log`/`warn`/`error`/`info` call
+    the project's own code makes, plus real runtime errors — both a
+    synchronous throw from `mount()` itself and an async one (an
+    uncaught exception or rejected promise after mount, via `window`
+    "error"/"unhandledrejection" listeners) — each timestamped and
+    color-coded by level, with a Clear button. The interception is
+    installed only while a preview is actually running and fully
+    undone when it stops or the window closes.
+  - An **"Open in Window"** button opens the project's CURRENT
+    in-memory source in a second, real, independent Anchoran window
+    (its own titlebar/taskbar entry) — not a downloaded/published
+    plugin, the same in-memory `runProject()` the embedded Preview
+    panel already uses, just mounted straight into that window with no
+    IDE chrome at all. Reuses the exact same `pluginHost` window +
+    `ctx.openPath` mechanism "My Creations" already uses to open Code
+    Studio itself, giving that same field a second meaning (a
+    `"preview:"`-prefixed project id) that Code Studio's own `mount()`
+    recognizes — no Anchoran OS changes needed. Calls the host's
+    `sdk.openApp`, which isn't part of the documented App SDK as of
+    this writing; the button degrades to a clear explanation instead
+    of silently doing nothing on a build that doesn't expose it yet.
 - An `author` field on every catalog entry (including Code Studio's),
   defaulting to `"Fachun Corporation"` for everything published here
   so far — shown by Anchoran OS's Webstore UI.
