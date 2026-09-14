@@ -10,41 +10,329 @@
       "minAnchoranVersion": "3.3.6",
       "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v1.0.0/hello-plugin.js"
     },
-    { "id": "calculator", "title": "Calculator", "description": "A standard calculator with memory keys and history.", "icon": "calculator", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/calculator.js" },
-    { "id": "chat", "title": "Chat", "description": "Anchoran's messaging app.", "icon": "chat", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/chat.js" },
-    { "id": "pomodoro", "title": "Pomodoro Timer", "description": "Focused work sessions with short breaks.", "icon": "pomodoro", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/pomodoro.js" },
-    { "id": "qrcode", "title": "QR Code", "description": "Generate a QR code from any text or link.", "icon": "qrCode", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/qrcode.js" },
-    { "id": "snake", "title": "Snake", "description": "The classic snake game.", "icon": "snake", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/snake.js" },
-    { "id": "game2048", "title": "2048", "description": "Slide and merge tiles to reach 2048.", "icon": "memoryMatch", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/game2048.js" },
-    { "id": "tictactoe", "title": "Tic-Tac-Toe", "description": "Classic tic-tac-toe — play a friend, or a bot with Easy/Medium/Hard difficulty (Hard plays perfectly).", "icon": "ticTacToe", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/tictactoe.js" },
-    { "id": "memorymatch", "title": "Memory Match", "description": "Flip cards to find every matching pair.", "icon": "memoryMatch", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/memorymatch.js" },
-    { "id": "checkers", "title": "Checkers", "description": "Classic checkers — play a friend, or a bot with Easy/Medium/Hard difficulty.", "icon": "checkers", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/checkers.js" },
-    { "id": "connectfour", "title": "Connect Four", "description": "Classic Connect Four — play a friend, or a bot with Easy/Medium/Hard difficulty.", "icon": "connectFour", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/connectfour.js" },
-    { "id": "minesweeper", "title": "Minesweeper", "description": "Clear the board without hitting a mine.", "icon": "minesweeper", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/minesweeper.js" },
-    { "id": "sudoku", "title": "Sudoku", "description": "Number puzzles at three difficulty levels.", "icon": "sudoku", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/sudoku.js" },
-    { "id": "solitaire", "title": "Solitaire", "description": "Classic Klondike solitaire.", "icon": "solitaire", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/solitaire.js" },
-    { "id": "chess", "title": "Chess", "description": "Full chess rules including castling and en passant — play a friend, or a bot with Easy/Medium/Hard difficulty.", "icon": "chess", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/chess.js" },
-    { "id": "calendar", "title": "Calendar", "description": "Month, week and day views, with events and a reminder notification.", "icon": "calendar", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/calendar.js" },
-    { "id": "kanban", "title": "Kanban", "description": "A To Do / Doing / Done board with drag-and-drop cards and color labels.", "icon": "kanban", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/kanban.js" },
-    { "id": "habittracker", "title": "Habit Tracker", "description": "Track daily habits with streaks and a best-streak record.", "icon": "habitTracker", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/habittracker.js" },
-    { "id": "weather", "title": "Weather", "description": "Live forecasts for up to five saved cities.", "icon": "weather", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/weather.js" },
-    { "id": "mindmap", "title": "Mind Map", "description": "A draggable idea map, with export/import as JSON.", "icon": "mindMap", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/mindmap.js" },
-    { "id": "spreadsheet", "title": "Spreadsheet", "description": "A lightweight spreadsheet with a real formula engine (SUM, AVG, MIN, MAX).", "icon": "spreadsheet", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/spreadsheet.js" },
-    { "id": "emojipicker", "title": "Emoji Picker", "description": "Browse and copy emoji, with a recently-used row and category search.", "icon": "emojiPicker", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/emojipicker.js" },
-    { "id": "typingtest", "title": "Typing Test", "description": "Measure your words-per-minute and accuracy, with a saved best score.", "icon": "typingTest", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/typingtest.js" },
-    { "id": "ttsreader", "title": "Text-to-Speech Reader", "description": "Have any pasted text read aloud, with a saved voice and speed.", "icon": "ttsReader", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/ttsreader.js" },
-    { "id": "clipboardmanager", "title": "Clipboard Shelf", "description": "A manual clipboard history you save entries to and search.", "icon": "clipboardManager", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/clipboardmanager.js" },
-    { "id": "ziptool", "title": "Zip Tool", "description": "Compress files into a .zip, or extract one — real compression via JSZip.", "icon": "zipTool", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/ziptool.js" },
-    { "id": "colorpicker", "title": "Color Picker", "description": "Pick colors, copy HEX/RGB/HSL, save swatches, and see complementary/analogous harmony colors.", "icon": "colorPicker", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/colorpicker.js" },
-    { "id": "clock", "title": "Clock", "description": "World clocks (add any timezone), a stopwatch, and a countdown timer.", "icon": "clock", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/clock.js" },
-    { "id": "magnifier", "title": "Magnifier", "description": "A zoomed screen lens that follows your cursor.", "icon": "magnifier", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/magnifier.js" },
-    { "id": "chance", "title": "Chance", "description": "Dice Roller and Coin Flip in one — fused from two near-identical random-chance toys.", "icon": "diceRoller", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/chance.js" },
-    { "id": "text-tools", "title": "Text Tools", "description": "JSON Formatter, Word Counter, Text Diff and Base64/URL Encode-Decode in one.", "icon": "jsonFormatter", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/text-tools.js" },
-    { "id": "converter", "title": "Converter", "description": "Unit conversion (length, weight, temperature, data, area, speed) and live currency rates in one.", "icon": "converter", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/converter.js" },
-    { "id": "password-tools", "title": "Password Tools", "description": "A password generator, an encrypted vault, and a strength checker in one.", "icon": "passwordVault", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/password-tools.js" },
-    { "id": "recorder", "title": "Recorder", "description": "Screen recording and voice memos in one, with a quality/bitrate selector.", "icon": "voiceRecorder", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/recorder.js" },
-    { "id": "draw-studio", "title": "Draw Studio", "description": "A raster canvas with layers, shapes, fill and undo, plus a pixel-art grid — fused from Paint and Pixel Art.", "icon": "paint", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/draw-studio.js" },
-    { "id": "image-tools", "title": "Image Tools", "description": "Screenshot capture (full screen or a selected region) and a wallpaper generator in one.", "icon": "screenshot", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/image-tools.js" },
-    { "id": "tasks-reminders", "title": "Tasks & Reminders", "description": "A checklist with optional due dates, plus time-of-day reminders with repeat rules.", "icon": "todo", "version": "1.0.0", "minAnchoranVersion": "3.4.0", "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.0.0/tasks-reminders.js" }
+    {
+      "id": "calculator",
+      "title": "Calculator",
+      "description": "A standard calculator with memory keys and history.",
+      "icon": "calculator",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calculator.js"
+    },
+    {
+      "id": "chat",
+      "title": "Chat",
+      "description": "Anchoran's messaging app.",
+      "icon": "chat",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chat.js"
+    },
+    {
+      "id": "pomodoro",
+      "title": "Pomodoro Timer",
+      "description": "Focused work sessions with short breaks.",
+      "icon": "pomodoro",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/pomodoro.js"
+    },
+    {
+      "id": "qrcode",
+      "title": "QR Code",
+      "description": "Generate a QR code from any text or link.",
+      "icon": "qrCode",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/qrcode.js"
+    },
+    {
+      "id": "snake",
+      "title": "Snake",
+      "description": "The classic snake game.",
+      "icon": "snake",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/snake.js"
+    },
+    {
+      "id": "game2048",
+      "title": "2048",
+      "description": "Slide and merge tiles to reach 2048.",
+      "icon": "memoryMatch",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/game2048.js"
+    },
+    {
+      "id": "tictactoe",
+      "title": "Tic-Tac-Toe",
+      "description": "Classic tic-tac-toe — play a friend, or a bot with Easy/Medium/Hard difficulty (Hard plays perfectly).",
+      "icon": "ticTacToe",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tictactoe.js"
+    },
+    {
+      "id": "memorymatch",
+      "title": "Memory Match",
+      "description": "Flip cards to find every matching pair.",
+      "icon": "memoryMatch",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/memorymatch.js"
+    },
+    {
+      "id": "checkers",
+      "title": "Checkers",
+      "description": "Classic checkers — play a friend, or a bot with Easy/Medium/Hard difficulty.",
+      "icon": "checkers",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/checkers.js"
+    },
+    {
+      "id": "connectfour",
+      "title": "Connect Four",
+      "description": "Classic Connect Four — play a friend, or a bot with Easy/Medium/Hard difficulty.",
+      "icon": "connectFour",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/connectfour.js"
+    },
+    {
+      "id": "minesweeper",
+      "title": "Minesweeper",
+      "description": "Clear the board without hitting a mine.",
+      "icon": "minesweeper",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/minesweeper.js"
+    },
+    {
+      "id": "sudoku",
+      "title": "Sudoku",
+      "description": "Number puzzles at three difficulty levels.",
+      "icon": "sudoku",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/sudoku.js"
+    },
+    {
+      "id": "solitaire",
+      "title": "Solitaire",
+      "description": "Classic Klondike solitaire.",
+      "icon": "solitaire",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/solitaire.js"
+    },
+    {
+      "id": "chess",
+      "title": "Chess",
+      "description": "Full chess rules including castling and en passant — play a friend, or a bot with Easy/Medium/Hard difficulty.",
+      "icon": "chess",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chess.js"
+    },
+    {
+      "id": "calendar",
+      "title": "Calendar",
+      "description": "Month, week and day views, with events and a reminder notification.",
+      "icon": "calendar",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calendar.js"
+    },
+    {
+      "id": "kanban",
+      "title": "Kanban",
+      "description": "A To Do / Doing / Done board with drag-and-drop cards and color labels.",
+      "icon": "kanban",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/kanban.js"
+    },
+    {
+      "id": "habittracker",
+      "title": "Habit Tracker",
+      "description": "Track daily habits with streaks and a best-streak record.",
+      "icon": "habitTracker",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/habittracker.js"
+    },
+    {
+      "id": "weather",
+      "title": "Weather",
+      "description": "Live forecasts for up to five saved cities.",
+      "icon": "weather",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/weather.js"
+    },
+    {
+      "id": "mindmap",
+      "title": "Mind Map",
+      "description": "A draggable idea map, with export/import as JSON.",
+      "icon": "mindMap",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/mindmap.js"
+    },
+    {
+      "id": "spreadsheet",
+      "title": "Spreadsheet",
+      "description": "A lightweight spreadsheet with a real formula engine (SUM, AVG, MIN, MAX).",
+      "icon": "spreadsheet",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/spreadsheet.js"
+    },
+    {
+      "id": "emojipicker",
+      "title": "Emoji Picker",
+      "description": "Browse and copy emoji, with a recently-used row and category search.",
+      "icon": "emojiPicker",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/emojipicker.js"
+    },
+    {
+      "id": "typingtest",
+      "title": "Typing Test",
+      "description": "Measure your words-per-minute and accuracy, with a saved best score.",
+      "icon": "typingTest",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/typingtest.js"
+    },
+    {
+      "id": "ttsreader",
+      "title": "Text-to-Speech Reader",
+      "description": "Have any pasted text read aloud, with a saved voice and speed.",
+      "icon": "ttsReader",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ttsreader.js"
+    },
+    {
+      "id": "clipboardmanager",
+      "title": "Clipboard Shelf",
+      "description": "A manual clipboard history you save entries to and search.",
+      "icon": "clipboardManager",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clipboardmanager.js"
+    },
+    {
+      "id": "ziptool",
+      "title": "Zip Tool",
+      "description": "Compress files into a .zip, or extract one — real compression via JSZip.",
+      "icon": "zipTool",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ziptool.js"
+    },
+    {
+      "id": "colorpicker",
+      "title": "Color Picker",
+      "description": "Pick colors, copy HEX/RGB/HSL, save swatches, and see complementary/analogous harmony colors.",
+      "icon": "colorPicker",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/colorpicker.js"
+    },
+    {
+      "id": "clock",
+      "title": "Clock",
+      "description": "World clocks (add any timezone), a stopwatch, and a countdown timer.",
+      "icon": "clock",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clock.js"
+    },
+    {
+      "id": "magnifier",
+      "title": "Magnifier",
+      "description": "A zoomed screen lens that follows your cursor.",
+      "icon": "magnifier",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/magnifier.js"
+    },
+    {
+      "id": "chance",
+      "title": "Chance",
+      "description": "Dice Roller and Coin Flip in one — fused from two near-identical random-chance toys.",
+      "icon": "diceRoller",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chance.js"
+    },
+    {
+      "id": "text-tools",
+      "title": "Text Tools",
+      "description": "JSON Formatter, Word Counter, Text Diff and Base64/URL Encode-Decode in one.",
+      "icon": "jsonFormatter",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/text-tools.js"
+    },
+    {
+      "id": "converter",
+      "title": "Converter",
+      "description": "Unit conversion (length, weight, temperature, data, area, speed) and live currency rates in one.",
+      "icon": "converter",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/converter.js"
+    },
+    {
+      "id": "password-tools",
+      "title": "Password Tools",
+      "description": "A password generator, an encrypted vault, and a strength checker in one.",
+      "icon": "passwordVault",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/password-tools.js"
+    },
+    {
+      "id": "recorder",
+      "title": "Recorder",
+      "description": "Screen recording and voice memos in one, with a quality/bitrate selector.",
+      "icon": "voiceRecorder",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/recorder.js"
+    },
+    {
+      "id": "draw-studio",
+      "title": "Draw Studio",
+      "description": "A raster canvas with layers, shapes, fill and undo, plus a pixel-art grid — fused from Paint and Pixel Art.",
+      "icon": "paint",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/draw-studio.js"
+    },
+    {
+      "id": "image-tools",
+      "title": "Image Tools",
+      "description": "Screenshot capture (full screen or a selected region) and a wallpaper generator in one.",
+      "icon": "screenshot",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/image-tools.js"
+    },
+    {
+      "id": "tasks-reminders",
+      "title": "Tasks & Reminders",
+      "description": "A checklist with optional due dates, plus time-of-day reminders with repeat rules.",
+      "icon": "todo",
+      "version": "1.0.0",
+      "minAnchoranVersion": "3.4.0",
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tasks-reminders.js"
+    }
   ]
 }
