@@ -66,6 +66,51 @@ Bundles every `plugins/<id>/src/index.js` into `plugins/<id>/dist/index.js`
 via esbuild — `react`/`react-dom` are never bundled in, since a plugin talks
 to the host's copy through `sdk` instead of importing them itself.
 
+## Plugin roster (v2.0.0)
+
+37 plugins as of this release: the pilot `hello-plugin`, 28 apps ported
+1:1 from Anchoran OS's old bundled app list (calculator, chat, pomodoro,
+qrcode, snake, game2048, tictactoe, memorymatch, checkers, connectfour,
+minesweeper, sudoku, solitaire, chess, calendar, kanban, habittracker,
+weather, mindmap, spreadsheet, emojipicker, typingtest, ttsreader,
+clipboardmanager, ziptool, colorpicker, clock, magnifier), and 8 groups
+fused from apps that shared the same real purpose instead of shipping
+near-duplicate plugins: `chance` (dice + coin), `text-tools` (JSON
+formatter + word counter + text diff + encode/decode), `converter`
+(units + currency), `password-tools` (generator + vault + strength
+checker), `recorder` (screen + voice), `draw-studio` (paint + pixel
+art, with layers/fill/shapes/undo added), `image-tools` (screenshot +
+wallpaper maker), and `tasks-reminders` (todo + reminders).
+
+`tictactoe`, `checkers`, `connectfour` and `chess` — every 2-player
+game in the roster — also ship a bot opponent (Easy/Medium/Hard).
+
+Four apps that used to be bundled apps stay core to Anchoran OS instead
+of becoming plugins: `notes`, `photoViewer`, `mediaPlayer` and
+`browser` are wired in as Files'/Launcher's own default file-type and
+URL handlers, not user-installable apps, so they're not in this catalog.
+A further group (systemMonitor, networkMonitor, storageUsage,
+eventViewer, startupApps, recycleBin, onScreenKeyboard, narrator,
+embeddedApp) stayed core because they need privileged host access
+(real CPU/network/disk stats, the internal event log, startup-app
+config, the virtual filesystem, system-level input hooks) that the App
+SDK deliberately doesn't expose to third-party code.
+
+## Testing a plugin
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+`tests/smoke.test.js` mounts every plugin in a real jsdom + React 18
+DOM (with the `canvas` package for real `<canvas>` support) using a
+fake SDK, fires a basic interaction, and calls the returned cleanup —
+catching the class of bug this repo's plugins are most at risk of: an
+effect or listener written as if it's still inside Anchoran's own React
+tree, or a timer/listener the cleanup function forgets to remove.
+
 ## Publishing
 
 Bump `catalog.json`'s relevant plugin `version` (and `package.json`'s own
