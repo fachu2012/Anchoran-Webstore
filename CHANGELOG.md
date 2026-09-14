@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this repo adheres to classic [Semantic Versioning](https://semver.org/) (`v#.#.#`) —
 a separate, independent version line from Anchoran OS's own "Version # | Build #H#.#" one.
 
+## [2.2.0] - 2026-09-14
+
+### Added
+- **Anchoran Code Studio** — a new community plugin, a local mini-IDE
+  for building your OWN Anchoran plugin from inside Anchoran OS: a
+  virtual file explorer (multiple projects, folders, rename/delete),
+  a real CodeMirror 6 editor with JS/JSX syntax highlighting and live
+  autocomplete (keywords plus already-declared names, via
+  `@codemirror/lang-javascript`'s own local-scope completion source),
+  real syntax checking and real Prettier formatting (both via
+  Prettier's browser "standalone" build), a live Preview panel that
+  runs the project's own `mount()` through a minimal in-memory
+  CommonJS-ish module resolver (relative `require`/`import` between a
+  project's own files only — see the plugin's own `runtime.js`), a
+  plain `.zip` export, and a "Make It Official" button that builds a
+  ready-to-publish package (formatted files, a `catalog-entry.json`
+  snippet, and a README with the manual publishing steps) — it never
+  pushes to GitHub itself, by design, since a plugin running on a
+  user's own PC must never carry publishing credentials.
+  - "Import from Official" clones any of this catalog's own published
+    plugins' real source as a new local, editable project (a personal
+    fork — the original is untouched) by fetching it straight from
+    this repo's own `main` branch.
+  - Every project (from-scratch or forked) can carry its own name,
+    description, and a custom icon imported from an image file, and
+    is 100% local to the user's Anchoran profile — see the plugin's
+    `store.js` for exactly how (and why) that data survives Anchoran
+    OS updates.
+  - Its `localStorage` project index/data shape is a small, stable
+    contract Anchoran OS's own Webstore "My Creations" section reads
+    directly (same origin, no IPC) to list and manage these projects
+    without opening Code Studio at all — see `store.js`'s header.
+- An `author` field on every catalog entry (including Code Studio's),
+  defaulting to `"Fachun Corporation"` for everything published here
+  so far — shown by Anchoran OS's Webstore UI.
+
 ## [2.1.0] - 2026-09-14
 
 ### Added

@@ -9,8 +9,10 @@ Webstore's Community section opens.
 ## How it works
 
 - `catalog.json` lists every published plugin: `id`, `title`, `version`,
-  `minAnchoranVersion` (the oldest Anchoran OS build that can run it), and
-  `entry` — a direct URL to that plugin's built, downloadable JS file.
+  `author` (defaults to `"Fachun Corporation"` for everything published
+  here so far), `minAnchoranVersion` (the oldest Anchoran OS build that
+  can run it), and `entry` — a direct URL to that plugin's built,
+  downloadable JS file.
 - Each plugin lives under `plugins/<id>/`, with its real source in `src/` and
   its built, minified output in `dist/index.js` — that `dist` file is exactly
   what Anchoran OS downloads and runs, nothing else.
@@ -66,21 +68,26 @@ Bundles every `plugins/<id>/src/index.js` into `plugins/<id>/dist/index.js`
 via esbuild — `react`/`react-dom` are never bundled in, since a plugin talks
 to the host's copy through `sdk` instead of importing them itself.
 
-## Plugin roster (v2.0.0)
+## Plugin roster (v2.2.0)
 
-37 plugins as of this release: the pilot `hello-plugin`, 28 apps ported
+38 plugins as of this release: the pilot `hello-plugin`, 28 apps ported
 1:1 from Anchoran OS's old bundled app list (calculator, chat, pomodoro,
 qrcode, snake, game2048, tictactoe, memorymatch, checkers, connectfour,
 minesweeper, sudoku, solitaire, chess, calendar, kanban, habittracker,
 weather, mindmap, spreadsheet, emojipicker, typingtest, ttsreader,
-clipboardmanager, ziptool, colorpicker, clock, magnifier), and 8 groups
+clipboardmanager, ziptool, colorpicker, clock, magnifier), 8 groups
 fused from apps that shared the same real purpose instead of shipping
 near-duplicate plugins: `chance` (dice + coin), `text-tools` (JSON
 formatter + word counter + text diff + encode/decode), `converter`
 (units + currency), `password-tools` (generator + vault + strength
 checker), `recorder` (screen + voice), `draw-studio` (paint + pixel
 art, with layers/fill/shapes/undo added), `image-tools` (screenshot +
-wallpaper maker), and `tasks-reminders` (todo + reminders).
+wallpaper maker), and `tasks-reminders` (todo + reminders), and
+`code-studio` (**Anchoran Code Studio**) — a local mini-IDE, built with
+a real CodeMirror 6 editor and real Prettier, for writing, previewing,
+exporting, and optionally packaging-for-publishing your own Anchoran
+plugin, entirely from within Anchoran OS itself; see its own
+`plugins/code-studio/src/index.js` header for the full design.
 
 `tictactoe`, `checkers`, `connectfour` and `chess` — every 2-player
 game in the roster — also ship a bot opponent (Easy/Medium/Hard).
