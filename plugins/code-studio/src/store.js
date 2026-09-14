@@ -70,7 +70,7 @@ const projectKey = (id) => `project:${id}`;
 
 export const DEFAULT_ENTRY_PATH = "index.js";
 
-const STARTER_TEMPLATE = `/**
+const EMPTY_APP_TEMPLATE = `/**
  * A new Anchoran plugin, written the same way every real plugin in the
  * Anchoran-Webstore catalog is: one exported mount(container, sdk, ctx)
  * function. Use the Preview panel to see it run live, then Format /
@@ -102,6 +102,213 @@ export function mount(container, sdk, ctx) {
   return () => root.unmount();
 }
 `;
+
+const COUNTER_TEMPLATE = `/**
+ * Counter — a classic React local-state example: a count with +/-
+ * buttons and a reset, built the same way every real Anchoran plugin
+ * is (sdk.React / sdk.ReactDOM, sdk.getAccentColor() / getThemeMode()
+ * for the couple of places that need a literal JS value). A good
+ * starting point for learning useState before building something
+ * bigger.
+ */
+export function mount(container, sdk, ctx) {
+  const { React, ReactDOM } = sdk;
+  const { createElement: h, useState } = React;
+  const accent = sdk.getAccentColor ? sdk.getAccentColor() : "#5B8DEF";
+  const dark = (sdk.getThemeMode ? sdk.getThemeMode() : "dark") === "dark";
+
+  function roundBtnStyle() {
+    return { width: 34, height: 34, borderRadius: 8, border: "none", background: accent, color: "#fff", fontSize: 18, lineHeight: 1, cursor: "pointer" };
+  }
+
+  function App() {
+    const [count, setCount] = useState(0);
+
+    return h(
+      "div",
+      { style: { padding: 20, fontFamily: "system-ui, sans-serif", color: dark ? "#F3F4F6" : "#14161B", display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" } },
+      h("div", { style: { fontSize: 14, fontWeight: 600 } }, "Counter"),
+      h(
+        "div",
+        { style: { display: "flex", alignItems: "center", gap: 14 } },
+        h("button", { onClick: () => setCount((c) => c - 1), style: roundBtnStyle() }, "−"),
+        h("div", { style: { fontSize: 28, fontWeight: 700, minWidth: 44, textAlign: "center" } }, count),
+        h("button", { onClick: () => setCount((c) => c + 1), style: roundBtnStyle() }, "+")
+      ),
+      h(
+        "button",
+        { onClick: () => setCount(0), style: { padding: "4px 2px", border: "none", background: "transparent", color: accent, cursor: "pointer", fontSize: 11.5 } },
+        "Reset"
+      )
+    );
+  }
+
+  const root = ReactDOM.createRoot(container);
+  root.render(h(App));
+  return () => root.unmount();
+}
+`;
+
+const TASK_LIST_LOGIC_TEMPLATE = `/**
+ * Task List — data layer, kept separate from index.js's UI on purpose:
+ * a small, real example of splitting a plugin into "logic" + "UI"
+ * files. Code Studio's preview resolves relative imports between a
+ * project's own files (see runtime.js in the Anchoran-Webstore repo),
+ * the same way multi-file plugins in the real catalog are structured.
+ *
+ * Persistence: plain localStorage, namespaced the same way every real
+ * Anchoran plugin does it (see plugins/_shared/pluginKit.js's
+ * pluginStorage helper) — an "anchoran-plugin:<id>:<key>" key, wrapped
+ * in try/catch since localStorage can be unavailable (private
+ * browsing, quota, etc). Swap "task-list-example" below for your real
+ * plugin id once you publish this project.
+ */
+const STORAGE_KEY = "anchoran-plugin:task-list-example:tasks";
+
+export function loadTasks() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveTasks(tasks) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch {
+    /* private/blocked localStorage — tasks just won't persist this session */
+  }
+}
+
+export function addTask(tasks, text) {
+  const trimmed = text.trim();
+  if (!trimmed) return tasks;
+  return [...tasks, { id: \`t-\${Date.now().toString(36)}-\${Math.random().toString(36).slice(2, 6)}\`, text: trimmed, done: false }];
+}
+
+export function toggleTask(tasks, id) {
+  return tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+}
+
+export function removeTask(tasks, id) {
+  return tasks.filter((t) => t.id !== id);
+}
+`;
+
+const TASK_LIST_INDEX_TEMPLATE = `/**
+ * Task List — add, mark done, delete, with tasks persisted in this
+ * plugin's own namespaced localStorage. The actual data + persistence
+ * logic lives in logic.js; this file is just the UI (see logic.js's
+ * header for why they're split).
+ */
+import { loadTasks, saveTasks, addTask, toggleTask, removeTask } from "./logic.js";
+
+export function mount(container, sdk, ctx) {
+  const { React, ReactDOM } = sdk;
+  const { createElement: h, useState } = React;
+  const accent = sdk.getAccentColor ? sdk.getAccentColor() : "#5B8DEF";
+  const dark = (sdk.getThemeMode ? sdk.getThemeMode() : "dark") === "dark";
+
+  function App() {
+    const [tasks, setTasks] = useState(() => loadTasks());
+    const [text, setText] = useState("");
+
+    function commit(next) {
+      setTasks(next);
+      saveTasks(next);
+    }
+
+    function handleAdd() {
+      const next = addTask(tasks, text);
+      if (next !== tasks) {
+        commit(next);
+        setText("");
+      }
+    }
+
+    return h(
+      "div",
+      { style: { padding: 20, fontFamily: "system-ui, sans-serif", color: dark ? "#F3F4F6" : "#14161B", display: "flex", flexDirection: "column", gap: 10, maxWidth: 320 } },
+      h("div", { style: { fontSize: 14, fontWeight: 600 } }, "Task List"),
+      h(
+        "div",
+        { style: { display: "flex", gap: 6 } },
+        h("input", {
+          value: text,
+          onChange: (e) => setText(e.target.value),
+          onKeyDown: (e) => e.key === "Enter" && handleAdd(),
+          placeholder: "Add a task…",
+          style: { flex: 1, padding: "6px 8px", borderRadius: 6, border: "1px solid rgba(128,128,128,.35)", background: "transparent", color: "inherit" },
+        }),
+        h("button", { onClick: handleAdd, style: { padding: "6px 12px", borderRadius: 6, border: "none", background: accent, color: "#fff", cursor: "pointer" } }, "Add")
+      ),
+      tasks.length === 0
+        ? h("div", { style: { opacity: 0.5, fontSize: 12 } }, "No tasks yet — add one above.")
+        : h(
+            "div",
+            { style: { display: "flex", flexDirection: "column", gap: 4 } },
+            tasks.map((t) =>
+              h(
+                "div",
+                { key: t.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 2px" } },
+                h("input", { type: "checkbox", checked: t.done, onChange: () => commit(toggleTask(tasks, t.id)) }),
+                h("span", { style: { flex: 1, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.55 : 1 } }, t.text),
+                h(
+                  "button",
+                  { onClick: () => commit(removeTask(tasks, t.id)), style: { border: "none", background: "transparent", color: "#E5484D", cursor: "pointer", fontSize: 13 } },
+                  "✕"
+                )
+              )
+            )
+          )
+    );
+  }
+
+  const root = ReactDOM.createRoot(container);
+  root.render(h(App));
+  return () => root.unmount();
+}
+`;
+
+/**
+ * Starting-point templates offered by "New Project" — chosen once, up
+ * front, purely to seed the new project's virtual file tree with real,
+ * runnable content (never empty placeholders): every template's files
+ * are valid syntax and preview-runnable with no edits required. "empty"
+ * is the default/first option and matches exactly what "New Project"
+ * always did before templates existed.
+ */
+export const PROJECT_TEMPLATES = [
+  {
+    id: "empty",
+    label: "Empty App",
+    description: "A minimal mount() with a single button — the classic blank starting point.",
+    entryPath: "index.js",
+    files: { "index.js": EMPTY_APP_TEMPLATE },
+  },
+  {
+    id: "counter",
+    label: "Counter",
+    description: "A +/- counter — a small example of local state with React's useState.",
+    entryPath: "index.js",
+    files: { "index.js": COUNTER_TEMPLATE },
+  },
+  {
+    id: "tasklist",
+    label: "Task List",
+    description: "Add / complete / delete tasks, persisted to localStorage — split into logic.js + index.js.",
+    entryPath: "index.js",
+    files: { "index.js": TASK_LIST_INDEX_TEMPLATE, "logic.js": TASK_LIST_LOGIC_TEMPLATE },
+  },
+];
+
+const DEFAULT_TEMPLATE_ID = "empty";
+
+function getTemplate(templateId) {
+  return PROJECT_TEMPLATES.find((t) => t.id === templateId) || PROJECT_TEMPLATES.find((t) => t.id === DEFAULT_TEMPLATE_ID);
+}
 
 function genId() {
   return `cs-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -165,18 +372,21 @@ export function deleteProject(id) {
 
 /**
  * Creates a new project. `opts.files` is a flat { path: content } map;
- * when omitted, a fresh project gets the starter template as its entry
- * file. `opts.forkOf` (when this project was cloned from a real
- * Webstore plugin via "Import from Official") records
- * { id, title, version } for provenance — shown in the UI and carried
- * into the "Make It Official" package's README. `opts.icon` is a data
- * URL (from an imported image file) or omitted.
+ * when omitted, a fresh project is seeded from a starting-point
+ * template (`opts.templateId`, see PROJECT_TEMPLATES above — defaults
+ * to "empty", matching the old always-blank behavior). `opts.forkOf`
+ * (when this project was cloned from a real Webstore plugin via
+ * "Import from Official") records { id, title, version } for
+ * provenance — shown in the UI and carried into the "Make It Official"
+ * package's README. `opts.icon` is a data URL (from an imported image
+ * file) or omitted.
  */
 export function createProject(opts = {}) {
   const id = genId();
   const now = Date.now();
-  const entryPath = opts.entryPath || DEFAULT_ENTRY_PATH;
-  const files = opts.files || { [entryPath]: STARTER_TEMPLATE };
+  const template = opts.files ? null : getTemplate(opts.templateId);
+  const entryPath = opts.entryPath || template?.entryPath || DEFAULT_ENTRY_PATH;
+  const files = opts.files || template.files;
   const project = {
     id,
     name: opts.name || "Untitled Project",

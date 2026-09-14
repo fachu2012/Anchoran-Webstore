@@ -211,7 +211,18 @@ export function mount(container, sdk, ctx) {
                   value: values[f.key],
                   onChange: (e) => setValues((v) => ({ ...v, [f.key]: e.target.value })),
                 })
-              : f.type === "file-image"
+              : f.type === "select"
+                ? h(
+                    "select",
+                    {
+                      className: "cs-modal-input",
+                      "aria-label": f.label,
+                      value: values[f.key],
+                      onChange: (e) => setValues((v) => ({ ...v, [f.key]: e.target.value })),
+                    },
+                    f.options.map((opt) => h("option", { key: opt.value, value: opt.value }, opt.label))
+                  )
+                : f.type === "file-image"
                 ? h(
                     "div",
                     { className: "cs-modal-icon-row" },
@@ -805,11 +816,18 @@ export function mount(container, sdk, ctx) {
           { key: "name", label: "Name", initial: "" },
           { key: "description", label: "Description", type: "textarea", initial: "" },
           { key: "icon", label: "Icon (optional image file)", type: "file-image", initial: null },
+          {
+            key: "template",
+            label: "Template",
+            type: "select",
+            initial: store.PROJECT_TEMPLATES[0].id,
+            options: store.PROJECT_TEMPLATES.map((t) => ({ value: t.id, label: `${t.label} — ${t.description}` })),
+          },
         ],
         submitLabel: "Create",
-        onSubmit: ({ name, description, icon }) => {
+        onSubmit: ({ name, description, icon, template }) => {
           if (!name.trim()) throw new Error("Enter a project name.");
-          const created = store.createProject({ name, description, icon });
+          const created = store.createProject({ name, description, icon, templateId: template });
           switchProject(created.id);
         },
       });

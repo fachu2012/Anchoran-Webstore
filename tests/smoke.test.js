@@ -485,3 +485,80 @@ test('code-studio: "Open in Window" calls sdk.openApp with a preview:<id> openPa
   withOpenApp.cleanup();
 });
 
+test("code-studio: New Project offers a Template selector with Empty App / Counter / Task List", async () => {
+  const { container, dom, cleanup } = await mountPlugin("code-studio");
+
+  clickButtonWithText(dom.window, container, "New");
+  await wait(20);
+
+  const select = container.querySelector(".cs-modal select.cs-modal-input");
+  assert.ok(select, "expected a <select> template field inside the New Project modal");
+  const optionLabels = Array.from(select.options).map((o) => o.textContent);
+  assert.ok(optionLabels.some((l) => l.startsWith("Empty App")), "expected an 'Empty App' template option");
+  assert.ok(optionLabels.some((l) => l.startsWith("Counter")), "expected a 'Counter' template option");
+  assert.ok(optionLabels.some((l) => l.startsWith("Task List")), "expected a 'Task List' template option");
+  assert.strictEqual(select.value, "empty", "Empty App should be the default/first template");
+
+  cleanup();
+});
+
+test("code-studio: choosing each template (Empty App / Counter / Task List) populates a new project's files with real, distinct, non-empty content", async () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "https://anchoran.local/" });
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.navigator = dom.window.navigator;
+  installJsdomPolyfills(dom.window);
+
+  const storeModPath = path.join(__dirname, "..", "plugins", "code-studio", "src", "store.js");
+  const store = await import(`${require("url").pathToFileURL(storeModPath).href}?t=${Date.now()}`);
+
+  const empty = store.createProject({ name: "Empty Template Project", templateId: "empty" });
+  const counter = store.createProject({ name: "Counter Template Project", templateId: "counter" });
+  const tasklist = store.createProject({ name: "Task List Template Project", templateId: "tasklist" });
+
+  for (const project of [empty, counter, tasklist]) {
+    assert.ok(project.files["index.js"] && project.files["index.js"].trim().length > 0, `${project.name} should have a non-empty index.js`);
+    assert.ok(project.files["index.js"].includes("export function mount("), `${project.name}'s index.js should export a real mount()`);
+  }
+
+  // Each template's content is genuinely different from the others (not the same stub reused three times).
+  assert.notStrictEqual(empty.files["index.js"], counter.files["index.js"]);
+  assert.notStrictEqual(empty.files["index.js"], tasklist.files["index.js"]);
+  assert.notStrictEqual(counter.files["index.js"], tasklist.files["index.js"]);
+
+  // Task List is the one template that's pedagogically split across two files.
+  assert.ok(tasklist.files["logic.js"] && tasklist.files["logic.js"].trim().length > 0, "expected Task List's logic.js to exist and be non-empty");
+  assert.ok(tasklist.files["logic.js"].includes("localStorage"), "expected Task List's logic.js to demonstrate real localStorage persistence");
+  assert.ok(!empty.files["logic.js"] && !counter.files["logic.js"], "logic.js is specific to the Task List template, not the others");
+});
+
+test("code-studio: the Task List template actually mounts and runs in the Preview panel without throwing", async () => {
+  const { container, dom, cleanup } = await mountPlugin("code-studio");
+
+  clickButtonWithText(dom.window, container, "New");
+  await wait(20);
+  const [nameInput] = container.querySelectorAll(".cs-modal-input, .cs-modal-textarea");
+  setInputValue(dom.window, nameInput, "Task List Preview Project");
+  const templateSelect = container.querySelector(".cs-modal select.cs-modal-input");
+  templateSelect.value = "tasklist";
+  templateSelect.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+  clickButtonWithText(dom.window, container, "Create");
+  await wait(80);
+
+  let unhandled = null;
+  const onUnhandled = (err) => (unhandled = err);
+  process.once("unhandledRejection", onUnhandled);
+
+  clickButtonWithText(dom.window, container, "Run Preview");
+  await waitUntil(() => container.querySelector(".cs-preview-host")?.childNodes.length > 0);
+  await wait(50);
+
+  process.removeListener("unhandledRejection", onUnhandled);
+  assert.strictEqual(unhandled, null, `Task List preview threw/rejected: ${unhandled}`);
+  assert.ok(!container.querySelector(".cs-preview-error"), "expected no preview error banner");
+  assert.ok(container.querySelector(".cs-preview-host").textContent.includes("Task List"), "expected the Task List template's own UI to have mounted live");
+  assert.ok(container.querySelector(".cs-preview-host").textContent.includes("No tasks yet"), "expected the Task List template's empty state to render");
+
+  cleanup();
+});
+

@@ -9,7 +9,14 @@
       "icon": "star",
       "version": "1.0.0",
       "minAnchoranVersion": "3.3.6",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v1.0.0/hello-plugin.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v1.0.0/hello-plugin.js",
+      "category": "System",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — the pilot community plugin, proving the whole catalog pipeline: built and released here, downloaded and mounted by Anchoran OS with no Anchoran OS release needed."
+        }
+      ]
     },
     {
       "id": "calculator",
@@ -19,7 +26,14 @@
       "icon": "calculator",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calculator.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calculator.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Calculator\" app."
+        }
+      ]
     },
     {
       "id": "chat",
@@ -29,7 +43,14 @@
       "icon": "chat",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chat.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chat.js",
+      "category": "Internet",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Chat\" app."
+        }
+      ]
     },
     {
       "id": "pomodoro",
@@ -39,7 +60,14 @@
       "icon": "pomodoro",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/pomodoro.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/pomodoro.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Pomodoro Timer\" app."
+        }
+      ]
     },
     {
       "id": "qrcode",
@@ -49,7 +77,14 @@
       "icon": "qrCode",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/qrcode.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/qrcode.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"QR Code\" app."
+        }
+      ]
     },
     {
       "id": "snake",
@@ -59,7 +94,14 @@
       "icon": "snake",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/snake.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/snake.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Snake\" app."
+        }
+      ]
     },
     {
       "id": "game2048",
@@ -69,7 +111,14 @@
       "icon": "memoryMatch",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/game2048.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/game2048.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"2048\" app."
+        }
+      ]
     },
     {
       "id": "tictactoe",
@@ -79,7 +128,14 @@
       "icon": "ticTacToe",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tictactoe.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tictactoe.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Tic-Tac-Toe\" app."
+        }
+      ]
     },
     {
       "id": "memorymatch",
@@ -89,7 +145,14 @@
       "icon": "memoryMatch",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/memorymatch.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/memorymatch.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Memory Match\" app."
+        }
+      ]
     },
     {
       "id": "checkers",
@@ -99,7 +162,14 @@
       "icon": "checkers",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/checkers.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/checkers.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Checkers\" app."
+        }
+      ]
     },
     {
       "id": "connectfour",
@@ -109,7 +179,14 @@
       "icon": "connectFour",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/connectfour.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/connectfour.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Connect Four\" app."
+        }
+      ]
     },
     {
       "id": "minesweeper",
@@ -119,7 +196,14 @@
       "icon": "minesweeper",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/minesweeper.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/minesweeper.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Minesweeper\" app."
+        }
+      ]
     },
     {
       "id": "sudoku",
@@ -129,7 +213,14 @@
       "icon": "sudoku",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/sudoku.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/sudoku.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Sudoku\" app."
+        }
+      ]
     },
     {
       "id": "solitaire",
@@ -139,7 +230,14 @@
       "icon": "solitaire",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/solitaire.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/solitaire.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Solitaire\" app."
+        }
+      ]
     },
     {
       "id": "chess",
@@ -149,7 +247,14 @@
       "icon": "chess",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chess.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chess.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Chess\" app."
+        }
+      ]
     },
     {
       "id": "calendar",
@@ -159,7 +264,14 @@
       "icon": "calendar",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calendar.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/calendar.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Calendar\" app."
+        }
+      ]
     },
     {
       "id": "kanban",
@@ -169,7 +281,14 @@
       "icon": "kanban",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/kanban.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/kanban.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Kanban\" app."
+        }
+      ]
     },
     {
       "id": "habittracker",
@@ -179,7 +298,14 @@
       "icon": "habitTracker",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/habittracker.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/habittracker.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Habit Tracker\" app."
+        }
+      ]
     },
     {
       "id": "weather",
@@ -189,7 +315,14 @@
       "icon": "weather",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/weather.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/weather.js",
+      "category": "Internet",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Weather\" app."
+        }
+      ]
     },
     {
       "id": "mindmap",
@@ -199,7 +332,14 @@
       "icon": "mindMap",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/mindmap.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/mindmap.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Mind Map\" app."
+        }
+      ]
     },
     {
       "id": "spreadsheet",
@@ -209,7 +349,14 @@
       "icon": "spreadsheet",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/spreadsheet.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/spreadsheet.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Spreadsheet\" app."
+        }
+      ]
     },
     {
       "id": "emojipicker",
@@ -219,7 +366,14 @@
       "icon": "emojiPicker",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/emojipicker.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/emojipicker.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Emoji Picker\" app."
+        }
+      ]
     },
     {
       "id": "typingtest",
@@ -229,7 +383,14 @@
       "icon": "typingTest",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/typingtest.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/typingtest.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Typing Test\" app."
+        }
+      ]
     },
     {
       "id": "ttsreader",
@@ -239,7 +400,14 @@
       "icon": "ttsReader",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ttsreader.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ttsreader.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Text-to-Speech Reader\" app."
+        }
+      ]
     },
     {
       "id": "clipboardmanager",
@@ -249,7 +417,14 @@
       "icon": "clipboardManager",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clipboardmanager.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clipboardmanager.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Clipboard Shelf\" app."
+        }
+      ]
     },
     {
       "id": "ziptool",
@@ -259,7 +434,14 @@
       "icon": "zipTool",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ziptool.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/ziptool.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Zip Tool\" app."
+        }
+      ]
     },
     {
       "id": "colorpicker",
@@ -269,7 +451,14 @@
       "icon": "colorPicker",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/colorpicker.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/colorpicker.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Color Picker\" app."
+        }
+      ]
     },
     {
       "id": "clock",
@@ -279,7 +468,14 @@
       "icon": "clock",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clock.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/clock.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Clock\" app."
+        }
+      ]
     },
     {
       "id": "magnifier",
@@ -289,7 +485,14 @@
       "icon": "magnifier",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/magnifier.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/magnifier.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Magnifier\" app."
+        }
+      ]
     },
     {
       "id": "chance",
@@ -299,7 +502,14 @@
       "icon": "diceRoller",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chance.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/chance.js",
+      "category": "Games",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Dice Roller and Coin Flip, two near-identical Anchoran OS bundled apps, into one."
+        }
+      ]
     },
     {
       "id": "text-tools",
@@ -309,7 +519,14 @@
       "icon": "jsonFormatter",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/text-tools.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/text-tools.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from JSON Formatter, Word Counter, Text Diff and Base64/URL Encode-Decode, Anchoran OS's old bundled apps, into one."
+        }
+      ]
     },
     {
       "id": "converter",
@@ -319,7 +536,14 @@
       "icon": "converter",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/converter.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/converter.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Unit Converter and Currency Converter, Anchoran OS's old bundled apps, into one."
+        }
+      ]
     },
     {
       "id": "password-tools",
@@ -329,7 +553,14 @@
       "icon": "passwordVault",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/password-tools.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/password-tools.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Password Generator, Password Vault and Strength Checker, Anchoran OS's old bundled apps, into one."
+        }
+      ]
     },
     {
       "id": "recorder",
@@ -339,7 +570,14 @@
       "icon": "voiceRecorder",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/recorder.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/recorder.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Screen Recorder and Voice Memos, Anchoran OS's old bundled apps, into one, with a quality/bitrate selector."
+        }
+      ]
     },
     {
       "id": "draw-studio",
@@ -349,7 +587,14 @@
       "icon": "paint",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/draw-studio.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/draw-studio.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Paint and Pixel Art, Anchoran OS's old bundled apps, into one raster canvas."
+        }
+      ]
     },
     {
       "id": "image-tools",
@@ -359,7 +604,14 @@
       "icon": "screenshot",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/image-tools.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/image-tools.js",
+      "category": "Utilities",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — fused from Screenshot and Wallpaper Generator, Anchoran OS's old bundled apps, into one."
+        }
+      ]
     },
     {
       "id": "tasks-reminders",
@@ -369,17 +621,39 @@
       "icon": "todo",
       "version": "1.0.0",
       "minAnchoranVersion": "3.4.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tasks-reminders.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.1.0/tasks-reminders.js",
+      "category": "Productivity",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release, ported from Anchoran OS's old bundled \"Tasks & Reminders\" app."
+        }
+      ]
     },
     {
       "id": "code-studio",
       "title": "Anchoran Code Studio",
-      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete, syntax checking, Prettier formatting, a live preview with a console/output panel, opening the app in its own real window, and export or a ready-to-publish \"Make It Official\" package.",
+      "description": "A local mini-IDE for building your own Anchoran plugin — file explorer, a real CodeMirror editor with autocomplete, syntax checking, Prettier formatting, a live preview with a console/output panel, opening the app in its own real window, export or a ready-to-publish \"Make It Official\" package, and starter templates (Empty App, Counter, Task List) for New Project.",
       "author": "Fachun Corporation",
       "icon": "terminal",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "minAnchoranVersion": "3.5.0",
-      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.3.0/code-studio.js"
+      "entry": "https://github.com/fachu2012/Anchoran-Webstore/releases/download/v2.4.0/code-studio.js",
+      "category": "System",
+      "recentChanges": [
+        {
+          "version": "1.0.0",
+          "notes": "Initial release — a local mini-IDE for building your own Anchoran plugin: virtual file explorer, real CodeMirror editor with autocomplete, syntax checking and Prettier formatting, a live Preview, .zip export, \"Make It Official\", and \"Import from Official\"."
+        },
+        {
+          "version": "1.1.0",
+          "notes": "Added a Console/Output panel (captures console.log/errors from a running preview) and \"Open in Window\" (runs the project in a real, separate Anchoran window)."
+        },
+        {
+          "version": "1.2.0",
+          "notes": "New Project now offers starter templates — Empty App, Counter (React state example) and Task List (add/complete/delete, persisted to localStorage, split into logic.js + index.js) — instead of always starting from a blank file."
+        }
+      ]
     }
   ]
 }

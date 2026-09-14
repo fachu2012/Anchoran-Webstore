@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this repo adheres to classic [Semantic Versioning](https://semver.org/) (`v#.#.#`) —
 a separate, independent version line from Anchoran OS's own "Version # | Build #H#.#" one.
 
+## [2.4.0] - 2026-09-14
+
+### Added
+- **Anchoran Code Studio gains starter templates for New Project.**
+  Creating a project now offers a Template selector instead of always
+  starting from a blank file:
+  - **Empty App** (default) — the same minimal `mount()` New Project
+    always opened with.
+  - **Counter** — a classic React local-state example (+/- buttons,
+    reset), using `sdk.React`/`sdk.ReactDOM` the same way every real
+    Anchoran plugin does.
+  - **Task List** — add/complete/delete tasks, persisted to the
+    project's own namespaced `localStorage` (the same pattern real
+    catalog plugins use), deliberately split into two files
+    (`logic.js` for data/persistence, `index.js` for UI) as a small,
+    real example of a multi-file plugin — Code Studio's own module
+    resolver already links a project's own files together.
+  - Every template's files are real, valid, and preview-runnable
+    immediately with no edits required — no empty placeholders.
+- **`catalog.json` gains a `category` field on every plugin entry**
+  (`Games`, `Productivity`, `Utilities`, `Internet`, `System`), and an
+  optional `recentChanges` field (a short per-plugin version history,
+  distinct from this shared changelog) — both purely additive data for
+  Anchoran OS's own Webstore UI to read; this repo's own manifest
+  loading and build are unaffected.
+
 ## [2.3.0] - 2026-09-14
 
 ### Added
